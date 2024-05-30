@@ -530,6 +530,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_ecs_tilemap"
+version = "0.12.0"
+source = "git+https://github.com/StarArawn/bevy_ecs_tilemap.git?rev=a7b308a#a7b308aa11ad82ac6b3b74c0237e607f1d4ddf5b"
+dependencies = [
+ "bevy",
+ "log",
+ "regex",
+]
+
+[[package]]
 name = "bevy_encase_derive"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -545,6 +555,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "bevy_ecs_tilemap",
  "bevy_kira_audio",
  "embed-resource",
  "image",
