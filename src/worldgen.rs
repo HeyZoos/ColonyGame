@@ -76,12 +76,12 @@ fn populate_tilemap(
         Tile::Grass => 12,
         Tile::GrassSideRight => 13,
 
-        Tile::GrassCornerBottomLeft => 23,
-        Tile::GrassSideBottom => 24,
-        Tile::GrassCornerBottomRight => 25,
+        Tile::GrassCornerBottomLeft => 22,
+        Tile::GrassSideBottom => 23,
+        Tile::GrassCornerBottomRight => 24,
 
-        Tile::Water => 1,
-        Tile::Sand => 2,
+        Tile::Water => 40,
+        Tile::Sand => 40,
     };
 
     for x in 0..WIDTH {
@@ -151,70 +151,70 @@ impl Constraint {
 
 fn get_constraints() -> Vec<Constraint> {
     let mut grass_neighbors = HashMap::new();
-    grass_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::GrassSideBottom]);
-    grass_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::GrassSideTop]);
-    grass_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::GrassSideLeft]);
-    grass_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::GrassSideRight]);
+    grass_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::GrassSideTop]);
+    grass_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::GrassSideBottom]);
+    grass_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::GrassSideRight]);
+    grass_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::GrassSideLeft]);
 
     let mut grass_side_top_neighbors = HashMap::new();
-    grass_side_top_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::GrassSideBottom]);
+    grass_side_top_neighbors.insert(Direction::North, vec![]);
     grass_side_top_neighbors.insert(Direction::South, vec![Tile::Grass]);
-    grass_side_top_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::GrassSideLeft, Tile::GrassCornerTopLeft]);
-    grass_side_top_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::GrassSideRight, Tile::GrassCornerTopRight]);
+    grass_side_top_neighbors.insert(Direction::East, vec![Tile::GrassSideTop, Tile::GrassCornerTopRight]);
+    grass_side_top_neighbors.insert(Direction::West, vec![Tile::GrassSideTop, Tile::GrassCornerTopLeft]);
 
     let mut grass_side_bottom_neighbors = HashMap::new();
     grass_side_bottom_neighbors.insert(Direction::North, vec![Tile::Grass]);
-    grass_side_bottom_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::GrassSideTop]);
-    grass_side_bottom_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::GrassSideLeft, Tile::GrassCornerBottomLeft]);
-    grass_side_bottom_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::GrassSideRight, Tile::GrassCornerBottomRight]);
+    grass_side_bottom_neighbors.insert(Direction::South, vec![]);
+    grass_side_bottom_neighbors.insert(Direction::East, vec![Tile::GrassSideBottom, Tile::GrassCornerBottomRight]);
+    grass_side_bottom_neighbors.insert(Direction::West, vec![Tile::GrassSideBottom, Tile::GrassCornerBottomLeft]);
 
     let mut grass_side_left_neighbors = HashMap::new();
-    grass_side_left_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::GrassSideBottom, Tile::GrassCornerBottomLeft]);
-    grass_side_left_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::GrassSideTop, Tile::GrassCornerTopLeft]);
+    grass_side_left_neighbors.insert(Direction::North, vec![Tile::GrassSideLeft, Tile::GrassCornerTopLeft]);
+    grass_side_left_neighbors.insert(Direction::South, vec![Tile::GrassSideLeft, Tile::GrassCornerBottomLeft]);
     grass_side_left_neighbors.insert(Direction::East, vec![Tile::Grass]);
-    grass_side_left_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::GrassSideRight]);
+    grass_side_left_neighbors.insert(Direction::West, vec![]);
 
     let mut grass_side_right_neighbors = HashMap::new();
-    grass_side_right_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::GrassSideBottom, Tile::GrassCornerBottomRight]);
-    grass_side_right_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::GrassSideTop, Tile::GrassCornerTopRight]);
-    grass_side_right_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::GrassSideLeft]);
+    grass_side_right_neighbors.insert(Direction::North, vec![Tile::GrassSideRight, Tile::GrassCornerTopRight]);
+    grass_side_right_neighbors.insert(Direction::South, vec![Tile::GrassSideRight, Tile::GrassCornerBottomRight]);
+    grass_side_right_neighbors.insert(Direction::East, vec![]);
     grass_side_right_neighbors.insert(Direction::West, vec![Tile::Grass]);
 
     let mut grass_corner_top_left_neighbors = HashMap::new();
-    grass_corner_top_left_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::GrassSideBottom]);
-    grass_corner_top_left_neighbors.insert(Direction::South, vec![Tile::Grass]);
-    grass_corner_top_left_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::GrassSideLeft]);
-    grass_corner_top_left_neighbors.insert(Direction::West, vec![Tile::Grass]);
+    grass_corner_top_left_neighbors.insert(Direction::North, vec![]);
+    grass_corner_top_left_neighbors.insert(Direction::South, vec![Tile::GrassSideLeft]);
+    grass_corner_top_left_neighbors.insert(Direction::East, vec![Tile::GrassSideTop]);
+    grass_corner_top_left_neighbors.insert(Direction::West, vec![]);
 
     let mut grass_corner_top_right_neighbors = HashMap::new();
-    grass_corner_top_right_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::GrassSideBottom]);
-    grass_corner_top_right_neighbors.insert(Direction::South, vec![Tile::Grass]);
-    grass_corner_top_right_neighbors.insert(Direction::East, vec![Tile::Grass]);
-    grass_corner_top_right_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::GrassSideRight]);
+    grass_corner_top_right_neighbors.insert(Direction::North, vec![]);
+    grass_corner_top_right_neighbors.insert(Direction::South, vec![Tile::GrassSideRight]);
+    grass_corner_top_right_neighbors.insert(Direction::East, vec![]);
+    grass_corner_top_right_neighbors.insert(Direction::West, vec![Tile::GrassSideTop]);
 
     let mut grass_corner_bottom_left_neighbors = HashMap::new();
-    grass_corner_bottom_left_neighbors.insert(Direction::North, vec![Tile::Grass]);
-    grass_corner_bottom_left_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::GrassSideTop]);
-    grass_corner_bottom_left_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::GrassSideLeft]);
-    grass_corner_bottom_left_neighbors.insert(Direction::West, vec![Tile::Grass]);
+    grass_corner_bottom_left_neighbors.insert(Direction::North, vec![Tile::GrassSideLeft]);
+    grass_corner_bottom_left_neighbors.insert(Direction::South, vec![]);
+    grass_corner_bottom_left_neighbors.insert(Direction::East, vec![Tile::GrassSideBottom]);
+    grass_corner_bottom_left_neighbors.insert(Direction::West, vec![]);
 
     let mut grass_corner_bottom_right_neighbors = HashMap::new();
-    grass_corner_bottom_right_neighbors.insert(Direction::North, vec![Tile::Grass]);
-    grass_corner_bottom_right_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::GrassSideTop]);
-    grass_corner_bottom_right_neighbors.insert(Direction::East, vec![Tile::Grass]);
-    grass_corner_bottom_right_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::GrassSideRight]);
+    grass_corner_bottom_right_neighbors.insert(Direction::North, vec![Tile::GrassSideRight]);
+    grass_corner_bottom_right_neighbors.insert(Direction::South, vec![]);
+    grass_corner_bottom_right_neighbors.insert(Direction::East, vec![]);
+    grass_corner_bottom_right_neighbors.insert(Direction::West, vec![Tile::GrassSideBottom]);
 
-    let mut water_neighbors = HashMap::new();
-    water_neighbors.insert(Direction::North, vec![Tile::Water, Tile::Sand]);
-    water_neighbors.insert(Direction::South, vec![Tile::Water, Tile::Sand]);
-    water_neighbors.insert(Direction::East, vec![Tile::Water, Tile::Sand]);
-    water_neighbors.insert(Direction::West, vec![Tile::Water, Tile::Sand]);
+    // let mut water_neighbors = HashMap::new();
+    // water_neighbors.insert(Direction::North, vec![Tile::Water, Tile::Sand]);
+    // water_neighbors.insert(Direction::South, vec![Tile::Water, Tile::Sand]);
+    // water_neighbors.insert(Direction::East, vec![Tile::Water, Tile::Sand]);
+    // water_neighbors.insert(Direction::West, vec![Tile::Water, Tile::Sand]);
 
-    let mut sand_neighbors = HashMap::new();
-    sand_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::Water, Tile::Sand]);
-    sand_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::Water, Tile::Sand]);
-    sand_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::Water, Tile::Sand]);
-    sand_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::Water, Tile::Sand]);
+    // let mut sand_neighbors = HashMap::new();
+    // sand_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::Water, Tile::Sand]);
+    // sand_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::Water, Tile::Sand]);
+    // sand_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::Water, Tile::Sand]);
+    // sand_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::Water, Tile::Sand]);
 
     vec![
         // Grass constraints
@@ -227,8 +227,8 @@ fn get_constraints() -> Vec<Constraint> {
         Constraint::new(Tile::GrassCornerTopRight, grass_corner_top_right_neighbors),
         Constraint::new(Tile::GrassCornerBottomLeft, grass_corner_bottom_left_neighbors),
         Constraint::new(Tile::GrassCornerBottomRight, grass_corner_bottom_right_neighbors),
-        Constraint::new(Tile::Water, water_neighbors),
-        Constraint::new(Tile::Sand, sand_neighbors),
+        // Constraint::new(Tile::Water, water_neighbors),
+        // Constraint::new(Tile::Sand, sand_neighbors),
     ]
 }
 
@@ -341,14 +341,14 @@ impl Grid {
 fn tile_to_char(tile: Tile) -> char {
     match tile {
         Tile::Grass => 'G',
-        Tile::GrassSideTop => 'T',
-        Tile::GrassSideBottom => 'B',
-        Tile::GrassSideLeft => 'L',
-        Tile::GrassSideRight => 'R',
-        Tile::GrassCornerTopLeft => '1',
-        Tile::GrassCornerTopRight => '2',
-        Tile::GrassCornerBottomLeft => '3',
-        Tile::GrassCornerBottomRight => '4',
+        Tile::GrassSideTop => '┬',
+        Tile::GrassSideBottom => '┴',
+        Tile::GrassSideLeft => '├',
+        Tile::GrassSideRight => '┤',
+        Tile::GrassCornerTopLeft => '⌜',
+        Tile::GrassCornerTopRight => '⌝',
+        Tile::GrassCornerBottomLeft => '⌞',
+        Tile::GrassCornerBottomRight => '⌟',
         Tile::Sand => 'S',
         Tile::Water => 'W',
     }
