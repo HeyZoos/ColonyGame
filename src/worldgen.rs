@@ -338,6 +338,7 @@ impl Grid {
     }
 
     fn propagate(&mut self, x: usize, y: usize, tile: Tile) {
+        println!("Placed tile {:#?} at {}, {}", tile, x, y);
         let directions = vec![
             (x.wrapping_sub(1), y, Direction::West),
             (x + 1, y, Direction::East),
@@ -349,6 +350,9 @@ impl Grid {
             if nx < WIDTH && ny < HEIGHT {
                 if let Some(allowed_neighbors) = self.constraints[&tile].allowed_neighbors.get(&direction) {
                     self.cells[nx][ny].possibilities.retain(|&neighbor| allowed_neighbors.contains(&neighbor));
+                    if self.cells[nx][ny].possibilities.is_empty() {
+                        println!("Placing tile {:#?} at {}, {} results in a contradiction at {}, {}", tile, x, y, nx, ny);
+                    }
                 } 
             }
         }
@@ -357,9 +361,7 @@ impl Grid {
     fn run(&mut self) -> bool {
         while let Some((x, y, tile)) = self.random_collapse() {
             self.propagate(x, y, tile);
-            println!("Placed tile {:#?} at {}, {}", tile, x, y);
             if self.cells.iter().any(|row| row.iter().any(|cell| cell.possibilities.is_empty())) {
-                println!("Placing tile {:#?} at {}, {} results in a contradiction, retrying", tile, x, y);
                 self.display();
                 return false;
             } else {
