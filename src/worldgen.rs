@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
-use rand::{seq::IteratorRandom, SeedableRng};
+use rand::{seq::IteratorRandom, thread_rng, SeedableRng};
 use std::collections::{self, HashMap, HashSet};
 
 // Constants
@@ -31,13 +31,19 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 
     let mut tile_storage = TileStorage::empty(tilemap_size);
 
-    let constraints = TileConstraints::from_pattern(
-        &vec![
-            vec![Tile::GrassCornerTopLeft,      Tile::GrassSideTop,     Tile::GrassCornerTopRight],
-            vec![Tile::GrassSideLeft,           Tile::Grass,            Tile::GrassSideRight],
-            vec![Tile::GrassCornerBottomLeft,   Tile::GrassSideBottom,  Tile::GrassCornerBottomRight]
-        ]
-    );
+    let constraints = TileConstraints::from_pattern(&vec![
+        vec![
+            Tile::GrassCornerTopLeft,
+            Tile::GrassSideTop,
+            Tile::GrassCornerTopRight,
+        ],
+        vec![Tile::GrassSideLeft, Tile::Grass, Tile::GrassSideRight],
+        vec![
+            Tile::GrassCornerBottomLeft,
+            Tile::GrassSideBottom,
+            Tile::GrassCornerBottomRight,
+        ],
+    ]);
 
     let mut grid = Grid::new(constraints.clone());
 
@@ -209,12 +215,12 @@ impl Grid {
         let tiles: Vec<Tile> = constraints.tiles();
         Grid {
             cells: vec![vec![Cell::new(&tiles); HEIGHT]; WIDTH],
-            constraints
+            constraints,
         }
     }
 
     fn random_collapse(&mut self) -> Option<(usize, usize, Tile)> {
-        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(123);
+        let mut rng = thread_rng();
         let mut min_possibilities = usize::MAX;
         let mut candidates = vec![];
 
@@ -259,8 +265,11 @@ impl Grid {
 
         for (nx, ny, direction) in directions {
             if nx < WIDTH && ny < HEIGHT {
-                if let Some(allowed_neighbors) = self.constraints.value[&tile].value.get(&direction) {
-                    self.cells[nx][ny].possibilities.retain(|&neighbor| allowed_neighbors.contains(&neighbor));
+                if let Some(allowed_neighbors) = self.constraints.value[&tile].value.get(&direction)
+                {
+                    self.cells[nx][ny]
+                        .possibilities
+                        .retain(|&neighbor| allowed_neighbors.contains(&neighbor));
                     if self.cells[nx][ny].possibilities.is_empty() {
                         println!(
                             "Placing tile {:#?} at {}, {} results in a contradiction at {}, {}",
@@ -313,7 +322,7 @@ fn tile_to_char(tile: Tile) -> char {
 
 #[derive(Clone, Debug)]
 pub struct DirectionalContraints {
-    value: HashMap<Direction, HashSet<Tile>>
+    value: HashMap<Direction, HashSet<Tile>>,
 }
 
 impl DirectionalContraints {
@@ -341,7 +350,7 @@ impl DirectionalContraints {
 
 #[derive(Clone, Debug)]
 pub struct TileConstraints {
-    value: HashMap<Tile, DirectionalContraints>
+    value: HashMap<Tile, DirectionalContraints>,
 }
 
 impl TileConstraints {
@@ -371,19 +380,59 @@ impl TileConstraints {
                 let mut neighbors = DirectionalContraints::new();
 
                 if y > 0 {
-                    neighbors.value.get_mut(&Direction::North).unwrap().insert(grid[y - 1][x].clone());
+                    neighbors
+                        .value
+                        .get_mut(&Direction::North)
+                        .unwrap()
+                        .insert(grid[y - 1][x].clone());
+                } else {
+                    neighbors
+                        .value
+                        .get_mut(&Direction::North)
+                        .unwrap()
+                        .insert(Tile::Empty);
                 }
 
                 if y < grid.len() - 1 {
-                    neighbors.value.get_mut(&Direction::South).unwrap().insert(grid[y + 1][x].clone());
+                    neighbors
+                        .value
+                        .get_mut(&Direction::South)
+                        .unwrap()
+                        .insert(grid[y + 1][x].clone());
+                } else {
+                    neighbors
+                        .value
+                        .get_mut(&Direction::South)
+                        .unwrap()
+                        .insert(Tile::Empty);
                 }
 
                 if x > 0 {
-                    neighbors.value.get_mut(&Direction::West).unwrap().insert(grid[y][x - 1].clone());
+                    neighbors
+                        .value
+                        .get_mut(&Direction::West)
+                        .unwrap()
+                        .insert(grid[y][x - 1].clone());
+                } else {
+                    neighbors
+                        .value
+                        .get_mut(&Direction::West)
+                        .unwrap()
+                        .insert(Tile::Empty);
                 }
 
                 if x < row.len() - 1 {
-                    neighbors.value.get_mut(&Direction::East).unwrap().insert(grid[y][x + 1].clone());
+                    neighbors
+                        .value
+                        .get_mut(&Direction::East)
+                        .unwrap()
+                        .insert(grid[y][x + 1].clone());
+                } else {
+                    neighbors
+                        .value
+                        .get_mut(&Direction::East)
+                        .unwrap()
+                        .insert(Tile::Empty);
                 }
 
                 constraints
