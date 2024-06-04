@@ -32,10 +32,30 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     let mut tile_storage = TileStorage::empty(tilemap_size);
 
     let grass_constraints = TileConstraints::from_pattern(&vec![
-        vec![Tile::GrassCornerTopLeft, Tile::GrassSideTop, Tile::GrassSideTop, Tile::GrassCornerTopRight],
-        vec![Tile::GrassSideLeft, Tile::Grass, Tile::Grass, Tile::GrassSideRight],
-        vec![Tile::GrassSideLeft, Tile::Grass, Tile::Grass, Tile::GrassSideRight],
-        vec![Tile::GrassCornerBottomLeft, Tile::GrassSideBottom, Tile::GrassSideBottom, Tile::GrassCornerBottomRight],
+        vec![
+            Tile::GrassCornerTopLeft,
+            Tile::GrassSideTop,
+            Tile::GrassSideTop,
+            Tile::GrassCornerTopRight,
+        ],
+        vec![
+            Tile::GrassSideLeft,
+            Tile::Grass,
+            Tile::Grass,
+            Tile::GrassSideRight,
+        ],
+        vec![
+            Tile::GrassSideLeft,
+            Tile::Grass,
+            Tile::Grass,
+            Tile::GrassSideRight,
+        ],
+        vec![
+            Tile::GrassCornerBottomLeft,
+            Tile::GrassSideBottom,
+            Tile::GrassSideBottom,
+            Tile::GrassCornerBottomRight,
+        ],
     ]);
 
     let empty_constraints = TileConstraints::from_pattern(&vec![vec![Tile::Empty]]);
