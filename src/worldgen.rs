@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
-use rand::{seq::IteratorRandom, thread_rng, SeedableRng};
-use std::collections::{self, HashMap, HashSet};
+use rand::{seq::IteratorRandom, thread_rng};
+use std::collections::{HashMap, HashSet};
 
 // Constants
 const WIDTH: usize = 3;
@@ -46,11 +46,12 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     ]);
 
     let mut grid = Grid::new(constraints.clone());
+    grid.run();
 
     // Just keep trying if it doesn't collapse
-    while !grid.run() {
-        grid = Grid::new(constraints.clone());
-    }
+    // while !grid.run() {
+        // grid = Grid::new(constraints.clone());
+    // }
 
     // Display the grid for debugging
     println!("Final result :)");
@@ -147,20 +148,6 @@ enum Tile {
     Empty,
     // Sand,
     // Water
-}
-
-struct Constraint {
-    tile: Tile,
-    allowed_neighbors: HashMap<Direction, Vec<Tile>>,
-}
-
-impl Constraint {
-    fn new(tile: Tile, allowed_neighbors: HashMap<Direction, Vec<Tile>>) -> Self {
-        Constraint {
-            tile,
-            allowed_neighbors,
-        }
-    }
 }
 
 // Cell and Grid Definitions
@@ -360,7 +347,7 @@ impl TileConstraints {
         }
     }
 
-    pub fn concat(&self, other: &Self) -> Self {
+    fn concat(&self, other: &Self) -> Self {
         let mut constraints = self.clone();
         for (tile, directionals) in &other.value {
             constraints
@@ -372,7 +359,7 @@ impl TileConstraints {
         constraints
     }
 
-    pub fn from_pattern(grid: &[Vec<Tile>]) -> Self {
+    fn from_pattern(grid: &[Vec<Tile>]) -> Self {
         let mut constraints = TileConstraints::new();
 
         for (y, row) in grid.iter().enumerate() {
@@ -446,11 +433,11 @@ impl TileConstraints {
         constraints
     }
 
-    pub fn keys(&self) -> Vec<Tile> {
+    fn keys(&self) -> Vec<Tile> {
         self.value.keys().cloned().collect()
     }
 
-    pub fn tiles(&self) -> Vec<Tile> {
+    fn tiles(&self) -> Vec<Tile> {
         self.keys()
     }
 }
