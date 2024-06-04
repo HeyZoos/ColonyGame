@@ -12,21 +12,35 @@ impl Plugin for WorldgenPlugin {
 
 fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     let texture_handle = assets.load("grass.png"); // TODO: This will eventually be a master tilemap containing all possible tiles
-    let tilemap_size = TilemapSize { x: 16, y: 16 };
+    let tilemap_size = TilemapSize {
+        x: WIDTH as u32,
+        y: HEIGHT as u32,
+    };
     let tilemap_entity = commands.spawn_empty().id();
     let mut tile_storage = TileStorage::empty(tilemap_size);
 
     let constraints = get_constraints();
     let mut grid = Grid::new(WIDTH, HEIGHT, constraints);
     grid.run();
-    grid.display();
+
+    let tile_id_mapping = |tile: Tile| match tile {
+        Tile::Grass => 0,
+        Tile::Water => 1,
+        Tile::Sand => 2,
+    };
 
     for x in 0..tilemap_size.x {
         for y in 0..tilemap_size.y {
             let tile_pos = TilePos { x, y };
+            let tile = grid.cells[x as usize][y as usize]
+                .possibilities
+                .iter()
+                .next()
+                .unwrap();
             let tile_entity = commands
                 .spawn(TileBundle {
                     position: tile_pos,
+                    texture_index: TileTextureIndex(tile_id_mapping(*tile)),
                     tilemap_id: TilemapId(tilemap_entity),
                     ..Default::default()
                 })
@@ -181,19 +195,6 @@ impl Grid {
     fn run(&mut self) {
         while let Some((x, y, tile)) = self.random_collapse() {
             self.propagate(x, y, tile);
-        }
-    }
-
-    fn display(&self) {
-        for row in &self.cells {
-            for cell in row {
-                if cell.possibilities.len() == 1 {
-                    print!("{:?} ", cell.possibilities.iter().next().unwrap());
-                } else {
-                    print!("? ");
-                }
-            }
-            println!();
         }
     }
 }
