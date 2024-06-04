@@ -1,6 +1,15 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use rand::seq::IteratorRandom;
+use rand::thread_rng;
+use std::collections::{HashMap, HashSet};
 
+// Constants
+const WIDTH: usize = 10;
+const HEIGHT: usize = 10;
+const TILE_SIZE: f32 = 16.0;
+
+// Plugin Definition
 pub struct WorldgenPlugin;
 
 impl Plugin for WorldgenPlugin {
@@ -10,46 +19,29 @@ impl Plugin for WorldgenPlugin {
     }
 }
 
+// Startup System
 fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     let texture_handle = assets.load("grass.png"); // TODO: This will eventually be a master tilemap containing all possible tiles
+
     let tilemap_size = TilemapSize {
         x: WIDTH as u32,
         y: HEIGHT as u32,
     };
+
     let tilemap_entity = commands.spawn_empty().id();
+
     let mut tile_storage = TileStorage::empty(tilemap_size);
 
     let constraints = get_constraints();
     let mut grid = Grid::new(WIDTH, HEIGHT, constraints);
     grid.run();
 
-    let tile_id_mapping = |tile: Tile| match tile {
-        Tile::Grass => 0,
-        Tile::Water => 1,
-        Tile::Sand => 2,
+    populate_tilemap(&mut commands, &mut tile_storage, &grid, tilemap_entity);
+
+    let tile_size = TilemapTileSize {
+        x: TILE_SIZE,
+        y: TILE_SIZE,
     };
-
-    for x in 0..tilemap_size.x {
-        for y in 0..tilemap_size.y {
-            let tile_pos = TilePos { x, y };
-            let tile = grid.cells[x as usize][y as usize]
-                .possibilities
-                .iter()
-                .next()
-                .unwrap();
-            let tile_entity = commands
-                .spawn(TileBundle {
-                    position: tile_pos,
-                    texture_index: TileTextureIndex(tile_id_mapping(*tile)),
-                    tilemap_id: TilemapId(tilemap_entity),
-                    ..Default::default()
-                })
-                .id();
-            tile_storage.set(&tile_pos, tile_entity);
-        }
-    }
-
-    let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
     let grid_size = tile_size.into();
     let map_type = TilemapType::default();
 
@@ -65,6 +57,40 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     });
 }
 
+// Populate Tilemap Function
+fn populate_tilemap(
+    commands: &mut Commands,
+    tile_storage: &mut TileStorage,
+    grid: &Grid,
+    tilemap_entity: Entity,
+) {
+    let tile_id_mapping = |tile: Tile| match tile {
+        Tile::Grass => 0,
+        Tile::Water => 1,
+        Tile::Sand => 2,
+    };
+
+    for x in 0..WIDTH {
+        for y in 0..HEIGHT {
+            let tile_pos = TilePos {
+                x: x as u32,
+                y: y as u32,
+            };
+            let tile = grid.cells[x][y].possibilities.iter().next().unwrap();
+            let tile_entity = commands
+                .spawn(TileBundle {
+                    position: tile_pos,
+                    texture_index: TileTextureIndex(tile_id_mapping(*tile)),
+                    tilemap_id: TilemapId(tilemap_entity),
+                    ..Default::default()
+                })
+                .id();
+            tile_storage.set(&tile_pos, tile_entity);
+        }
+    }
+}
+
+// Tile and Constraint Definitions
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Tile {
     Grass,
@@ -94,11 +120,7 @@ fn get_constraints() -> Vec<Constraint> {
     ]
 }
 
-use std::collections::{HashMap, HashSet};
-
-const WIDTH: usize = 10;
-const HEIGHT: usize = 10;
-
+// Cell and Grid Definitions
 #[derive(Clone, Debug)]
 struct Cell {
     possibilities: HashSet<Tile>,
@@ -137,12 +159,7 @@ impl Grid {
             constraints: constraint_map,
         }
     }
-}
 
-use rand::seq::IteratorRandom;
-use rand::thread_rng;
-
-impl Grid {
     fn random_collapse(&mut self) -> Option<(usize, usize, Tile)> {
         let mut rng = thread_rng();
         let mut min_possibilities = usize::MAX;
@@ -169,9 +186,7 @@ impl Grid {
         }
         None
     }
-}
 
-impl Grid {
     fn propagate(&mut self, x: usize, y: usize, tile: Tile) {
         let neighbors = vec![
             (x.wrapping_sub(1), y),
@@ -189,9 +204,7 @@ impl Grid {
             }
         }
     }
-}
 
-impl Grid {
     fn run(&mut self) {
         while let Some((x, y, tile)) = self.random_collapse() {
             self.propagate(x, y, tile);
