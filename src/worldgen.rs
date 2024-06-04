@@ -4,8 +4,8 @@ use rand::{seq::IteratorRandom, SeedableRng};
 use std::collections::{self, HashMap, HashSet};
 
 // Constants
-const WIDTH: usize = 4;
-const HEIGHT: usize = 4;
+const WIDTH: usize = 3;
+const HEIGHT: usize = 3;
 const TILE_SIZE: f32 = 16.0;
 
 // Plugin Definition
@@ -31,12 +31,19 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 
     let mut tile_storage = TileStorage::empty(tilemap_size);
 
-    let constraints = get_constraints();
-    let mut grid = Grid::new(WIDTH, HEIGHT, constraints);
+    let constraints = TileConstraints::from_pattern(
+        &vec![
+            vec![Tile::GrassCornerTopLeft,      Tile::GrassSideTop,     Tile::GrassCornerTopRight],
+            vec![Tile::GrassSideLeft,           Tile::Grass,            Tile::GrassSideRight],
+            vec![Tile::GrassCornerBottomLeft,   Tile::GrassSideBottom,  Tile::GrassCornerBottomRight]
+        ]
+    );
+
+    let mut grid = Grid::new(constraints.clone());
 
     // Just keep trying if it doesn't collapse
     while !grid.run() {
-        grid = Grid::new(WIDTH, HEIGHT, get_constraints());
+        grid = Grid::new(constraints.clone());
     }
 
     // Display the grid for debugging
@@ -75,7 +82,7 @@ fn populate_tilemap(
         Tile::GrassCornerTopLeft => 0,
         Tile::GrassSideTop => 1,
         Tile::GrassCornerTopRight => 2,
-        
+
         Tile::GrassSideLeft => 11,
         Tile::Grass => 12,
         Tile::GrassSideRight => 13,
@@ -85,7 +92,6 @@ fn populate_tilemap(
         Tile::GrassCornerBottomRight => 24,
 
         Tile::Empty => 44,
-
         // Tile::Water => 40,
         // Tile::Sand => 40,
     };
@@ -106,11 +112,10 @@ fn populate_tilemap(
                     })
                     .id();
                 tile_storage.set(&tile_pos, tile_entity);
-            }        
+            }
         }
     }
 }
-
 
 // Direction Enum
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -152,96 +157,6 @@ impl Constraint {
     }
 }
 
-fn get_constraints() -> Vec<Constraint> {
-    let mut empty_neighbors = HashMap::new();
-    empty_neighbors.insert(Direction::North, vec![Tile::Empty]);
-    empty_neighbors.insert(Direction::South, vec![Tile::Empty]);
-    empty_neighbors.insert(Direction::East, vec![Tile::Empty]);
-    empty_neighbors.insert(Direction::West, vec![Tile::Empty]);
-
-    let mut grass_neighbors = HashMap::new();
-    grass_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::GrassSideTop]);
-    grass_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::GrassSideBottom]);
-    grass_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::GrassSideRight]);
-    grass_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::GrassSideLeft]);
-
-    let mut grass_side_top_neighbors = HashMap::new();
-    grass_side_top_neighbors.insert(Direction::North, vec![Tile::Empty]);
-    grass_side_top_neighbors.insert(Direction::South, vec![Tile::Grass]);
-    grass_side_top_neighbors.insert(Direction::East, vec![Tile::GrassSideTop, Tile::GrassCornerTopRight]);
-    grass_side_top_neighbors.insert(Direction::West, vec![Tile::GrassSideTop, Tile::GrassCornerTopLeft]);
-
-    let mut grass_side_bottom_neighbors = HashMap::new();
-    grass_side_bottom_neighbors.insert(Direction::North, vec![Tile::Grass]);
-    grass_side_bottom_neighbors.insert(Direction::South, vec![Tile::Empty]);
-    grass_side_bottom_neighbors.insert(Direction::East, vec![Tile::GrassSideBottom, Tile::GrassCornerBottomRight]);
-    grass_side_bottom_neighbors.insert(Direction::West, vec![Tile::GrassSideBottom, Tile::GrassCornerBottomLeft]);
-
-    let mut grass_side_left_neighbors = HashMap::new();
-    grass_side_left_neighbors.insert(Direction::North, vec![Tile::GrassSideLeft, Tile::GrassCornerTopLeft]);
-    grass_side_left_neighbors.insert(Direction::South, vec![Tile::GrassSideLeft, Tile::GrassCornerBottomLeft]);
-    grass_side_left_neighbors.insert(Direction::East, vec![Tile::Grass]);
-    grass_side_left_neighbors.insert(Direction::West, vec![Tile::Empty]);
-
-    let mut grass_side_right_neighbors = HashMap::new();
-    grass_side_right_neighbors.insert(Direction::North, vec![Tile::GrassSideRight, Tile::GrassCornerTopRight]);
-    grass_side_right_neighbors.insert(Direction::South, vec![Tile::GrassSideRight, Tile::GrassCornerBottomRight]);
-    grass_side_right_neighbors.insert(Direction::East, vec![Tile::Empty]);
-    grass_side_right_neighbors.insert(Direction::West, vec![Tile::Grass]);
-
-    let mut grass_corner_top_left_neighbors = HashMap::new();
-    grass_corner_top_left_neighbors.insert(Direction::North, vec![Tile::Empty]);
-    grass_corner_top_left_neighbors.insert(Direction::South, vec![Tile::GrassSideLeft]);
-    grass_corner_top_left_neighbors.insert(Direction::East, vec![Tile::GrassSideTop]);
-    grass_corner_top_left_neighbors.insert(Direction::West, vec![Tile::Empty]);
-
-    let mut grass_corner_top_right_neighbors = HashMap::new();
-    grass_corner_top_right_neighbors.insert(Direction::North, vec![Tile::Empty]);
-    grass_corner_top_right_neighbors.insert(Direction::South, vec![Tile::GrassSideRight]);
-    grass_corner_top_right_neighbors.insert(Direction::East, vec![Tile::Empty]);
-    grass_corner_top_right_neighbors.insert(Direction::West, vec![Tile::GrassSideTop]);
-
-    let mut grass_corner_bottom_left_neighbors = HashMap::new();
-    grass_corner_bottom_left_neighbors.insert(Direction::North, vec![Tile::GrassSideLeft]);
-    grass_corner_bottom_left_neighbors.insert(Direction::South, vec![Tile::Empty]);
-    grass_corner_bottom_left_neighbors.insert(Direction::East, vec![Tile::GrassSideBottom]);
-    grass_corner_bottom_left_neighbors.insert(Direction::West, vec![Tile::Empty]);
-
-    let mut grass_corner_bottom_right_neighbors = HashMap::new();
-    grass_corner_bottom_right_neighbors.insert(Direction::North, vec![Tile::GrassSideRight]);
-    grass_corner_bottom_right_neighbors.insert(Direction::South, vec![Tile::Empty]);
-    grass_corner_bottom_right_neighbors.insert(Direction::East, vec![Tile::Empty]);
-    grass_corner_bottom_right_neighbors.insert(Direction::West, vec![Tile::GrassSideBottom]);
-
-    // let mut water_neighbors = HashMap::new();
-    // water_neighbors.insert(Direction::North, vec![Tile::Water, Tile::Sand]);
-    // water_neighbors.insert(Direction::South, vec![Tile::Water, Tile::Sand]);
-    // water_neighbors.insert(Direction::East, vec![Tile::Water, Tile::Sand]);
-    // water_neighbors.insert(Direction::West, vec![Tile::Water, Tile::Sand]);
-
-    // let mut sand_neighbors = HashMap::new();
-    // sand_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::Water, Tile::Sand]);
-    // sand_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::Water, Tile::Sand]);
-    // sand_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::Water, Tile::Sand]);
-    // sand_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::Water, Tile::Sand]);
-
-    vec![
-        // Grass constraints
-        Constraint::new(Tile::Grass, grass_neighbors),
-        Constraint::new(Tile::GrassSideTop, grass_side_top_neighbors),
-        Constraint::new(Tile::GrassSideBottom, grass_side_bottom_neighbors),
-        Constraint::new(Tile::GrassSideLeft, grass_side_left_neighbors),
-        Constraint::new(Tile::GrassSideRight, grass_side_right_neighbors),
-        Constraint::new(Tile::GrassCornerTopLeft, grass_corner_top_left_neighbors),
-        Constraint::new(Tile::GrassCornerTopRight, grass_corner_top_right_neighbors),
-        Constraint::new(Tile::GrassCornerBottomLeft, grass_corner_bottom_left_neighbors),
-        Constraint::new(Tile::GrassCornerBottomRight, grass_corner_bottom_right_neighbors),
-        Constraint::new(Tile::Empty, empty_neighbors)
-        // Constraint::new(Tile::Water, water_neighbors),
-        // Constraint::new(Tile::Sand, sand_neighbors),
-    ]
-}
-
 // Cell and Grid Definitions
 #[derive(Clone, Debug)]
 struct Cell {
@@ -253,7 +168,7 @@ impl Cell {
     fn new(possible_tiles: &Vec<Tile>) -> Self {
         Cell {
             possibilities: possible_tiles.iter().cloned().collect(),
-            collapsed: false
+            collapsed: false,
         }
     }
 
@@ -266,7 +181,7 @@ impl Cell {
 
 struct Grid {
     cells: Vec<Vec<Cell>>,
-    constraints: HashMap<Tile, Constraint>,
+    constraints: TileConstraints,
 }
 
 impl Grid {
@@ -290,15 +205,11 @@ impl Grid {
         println!("---------------");
     }
 
-    fn new(width: usize, height: usize, constraints: Vec<Constraint>) -> Self {
-        let possible_tiles: Vec<Tile> = constraints.iter().map(|c| c.tile).collect();
-        let mut constraint_map = HashMap::new();
-        for constraint in constraints {
-            constraint_map.insert(constraint.tile, constraint);
-        }
+    fn new(constraints: TileConstraints) -> Self {
+        let tiles: Vec<Tile> = constraints.tiles();
         Grid {
-            cells: vec![vec![Cell::new(&possible_tiles); height]; width],
-            constraints: constraint_map,
+            cells: vec![vec![Cell::new(&tiles); HEIGHT]; WIDTH],
+            constraints
         }
     }
 
@@ -308,9 +219,9 @@ impl Grid {
         let mut candidates = vec![];
 
         // This loop finds cells with the minimum number of possibilities as candidates for collapse
-        // in the wave function collapse algorithm. It iterates through all cells and keeps track of 
+        // in the wave function collapse algorithm. It iterates through all cells and keeps track of
         // the cell with the fewest remaining valid tile options. Cells with the same minimum possibility
-        // count are also considered as candidates. 
+        // count are also considered as candidates.
         for x in 0..WIDTH {
             for y in 0..HEIGHT {
                 let possibilities = self.cells[x][y].possibilities.len();
@@ -325,7 +236,7 @@ impl Grid {
         }
 
         // This code block performs a random collapse on a chosen candidate cell and implements backtracking.
-        // It first chooses a random cell from the `candidates` list. Then, it randomly chooses a 
+        // It first chooses a random cell from the `candidates` list. Then, it randomly chooses a
         // possible tile from that cell.
         if let Some(&(x, y)) = candidates.iter().choose(&mut rng) {
             if let Some(&tile) = self.cells[x][y].possibilities.iter().choose(&mut rng) {
@@ -348,12 +259,15 @@ impl Grid {
 
         for (nx, ny, direction) in directions {
             if nx < WIDTH && ny < HEIGHT {
-                if let Some(allowed_neighbors) = self.constraints[&tile].allowed_neighbors.get(&direction) {
+                if let Some(allowed_neighbors) = self.constraints.value[&tile].value.get(&direction) {
                     self.cells[nx][ny].possibilities.retain(|&neighbor| allowed_neighbors.contains(&neighbor));
                     if self.cells[nx][ny].possibilities.is_empty() {
-                        println!("Placing tile {:#?} at {}, {} results in a contradiction at {}, {}", tile, x, y, nx, ny);
+                        println!(
+                            "Placing tile {:#?} at {}, {} results in a contradiction at {}, {}",
+                            tile, x, y, nx, ny
+                        );
                     }
-                } 
+                }
             }
         }
     }
@@ -361,7 +275,11 @@ impl Grid {
     fn run(&mut self) -> bool {
         while let Some((x, y, tile)) = self.random_collapse() {
             self.propagate(x, y, tile);
-            if self.cells.iter().any(|row| row.iter().any(|cell| cell.possibilities.is_empty())) {
+            if self
+                .cells
+                .iter()
+                .any(|row| row.iter().any(|cell| cell.possibilities.is_empty()))
+            {
                 self.display();
                 return false;
             } else {
@@ -370,7 +288,9 @@ impl Grid {
         }
 
         // Check if all cells have a single possibility (solution found)
-        self.cells.iter().all(|row| row.iter().all(|cell| cell.possibilities.len() == 1))
+        self.cells
+            .iter()
+            .all(|row| row.iter().all(|cell| cell.possibilities.len() == 1))
     }
 }
 
@@ -388,5 +308,100 @@ fn tile_to_char(tile: Tile) -> char {
         Tile::Empty => ' ',
         // Tile::Sand => 'S',
         // Tile::Water => 'W',
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct DirectionalContraints {
+    value: HashMap<Direction, HashSet<Tile>>
+}
+
+impl DirectionalContraints {
+    pub fn new() -> Self {
+        let mut value = HashMap::new();
+        value.insert(Direction::North, HashSet::new());
+        value.insert(Direction::South, HashSet::new());
+        value.insert(Direction::East, HashSet::new());
+        value.insert(Direction::West, HashSet::new());
+        Self { value }
+    }
+
+    pub fn concat(&self, other: &Self) -> Self {
+        let mut constraints = self.clone();
+        for (direction, tiles) in &other.value {
+            constraints
+                .value
+                .entry(direction.clone())
+                .or_insert_with(HashSet::new)
+                .extend(tiles.iter().cloned());
+        }
+        constraints
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct TileConstraints {
+    value: HashMap<Tile, DirectionalContraints>
+}
+
+impl TileConstraints {
+    pub fn new() -> Self {
+        Self {
+            value: HashMap::new(),
+        }
+    }
+
+    pub fn concat(&self, other: &Self) -> Self {
+        let mut constraints = self.clone();
+        for (tile, directionals) in &other.value {
+            constraints
+                .value
+                .entry(tile.clone())
+                .and_modify(|entry| *entry = entry.concat(directionals))
+                .or_insert_with(|| directionals.clone());
+        }
+        constraints
+    }
+
+    pub fn from_pattern(grid: &[Vec<Tile>]) -> Self {
+        let mut constraints = TileConstraints::new();
+
+        for (y, row) in grid.iter().enumerate() {
+            for (x, tile) in row.iter().enumerate() {
+                let mut neighbors = DirectionalContraints::new();
+
+                if y > 0 {
+                    neighbors.value.get_mut(&Direction::North).unwrap().insert(grid[y - 1][x].clone());
+                }
+
+                if y < grid.len() - 1 {
+                    neighbors.value.get_mut(&Direction::South).unwrap().insert(grid[y + 1][x].clone());
+                }
+
+                if x > 0 {
+                    neighbors.value.get_mut(&Direction::West).unwrap().insert(grid[y][x - 1].clone());
+                }
+
+                if x < row.len() - 1 {
+                    neighbors.value.get_mut(&Direction::East).unwrap().insert(grid[y][x + 1].clone());
+                }
+
+                constraints
+                    .value
+                    .entry(tile.clone())
+                    .and_modify(|entry| *entry = entry.concat(&neighbors))
+                    .or_insert_with(|| neighbors);
+            }
+        }
+
+        constraints
+    }
+
+    pub fn keys(&self) -> Vec<Tile> {
+        self.value.keys().cloned().collect()
+    }
+
+    pub fn tiles(&self) -> Vec<Tile> {
+        self.keys()
     }
 }
