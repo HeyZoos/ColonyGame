@@ -561,6 +561,7 @@ dependencies = [
  "embed-resource",
  "image",
  "rand",
+ "rand_chacha",
  "webbrowser",
  "winit",
 ]

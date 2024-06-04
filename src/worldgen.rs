@@ -1,12 +1,11 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
-use rand::seq::IteratorRandom;
-use rand::thread_rng;
+use rand::{seq::IteratorRandom, SeedableRng};
 use std::collections::{HashMap, HashSet};
 
 // Constants
-const WIDTH: usize = 10;
-const HEIGHT: usize = 10;
+const WIDTH: usize = 2;
+const HEIGHT: usize = 2;
 const TILE_SIZE: f32 = 16.0;
 
 // Plugin Definition
@@ -80,8 +79,8 @@ fn populate_tilemap(
         Tile::GrassSideBottom => 23,
         Tile::GrassCornerBottomRight => 24,
 
-        Tile::Water => 40,
-        Tile::Sand => 40,
+        // Tile::Water => 40,
+        // Tile::Sand => 40,
     };
 
     for x in 0..WIDTH {
@@ -131,8 +130,8 @@ enum Tile {
     GrassCornerTopRight,
     GrassCornerBottomLeft,
     GrassCornerBottomRight,
-    Sand,
-    Water
+    // Sand,
+    // Water
 }
 
 struct Constraint {
@@ -284,7 +283,7 @@ impl Grid {
     }
 
     fn random_collapse(&mut self) -> Option<(usize, usize, Tile)> {
-        let mut rng = thread_rng();
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(123);
         let mut min_possibilities = usize::MAX;
         let mut candidates = vec![];
 
@@ -349,7 +348,7 @@ fn tile_to_char(tile: Tile) -> char {
         Tile::GrassCornerTopRight => '⌝',
         Tile::GrassCornerBottomLeft => '⌞',
         Tile::GrassCornerBottomRight => '⌟',
-        Tile::Sand => 'S',
-        Tile::Water => 'W',
+        // Tile::Sand => 'S',
+        // Tile::Water => 'W',
     }
 }
