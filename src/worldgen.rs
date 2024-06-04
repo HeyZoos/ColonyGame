@@ -90,6 +90,15 @@ fn populate_tilemap(
     }
 }
 
+// Direction Enum
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+
 // Tile and Constraint Definitions
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum Tile {
@@ -100,11 +109,11 @@ enum Tile {
 
 struct Constraint {
     tile: Tile,
-    allowed_neighbors: Vec<Tile>,
+    allowed_neighbors: HashMap<Direction, Vec<Tile>>,
 }
 
 impl Constraint {
-    fn new(tile: Tile, allowed_neighbors: Vec<Tile>) -> Self {
+    fn new(tile: Tile, allowed_neighbors: HashMap<Direction, Vec<Tile>>) -> Self {
         Constraint {
             tile,
             allowed_neighbors,
@@ -113,10 +122,28 @@ impl Constraint {
 }
 
 fn get_constraints() -> Vec<Constraint> {
+    let mut grass_neighbors = HashMap::new();
+    grass_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::Sand]);
+    grass_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::Sand]);
+    grass_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::Sand]);
+    grass_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::Sand]);
+
+    let mut water_neighbors = HashMap::new();
+    water_neighbors.insert(Direction::North, vec![Tile::Water, Tile::Sand]);
+    water_neighbors.insert(Direction::South, vec![Tile::Water, Tile::Sand]);
+    water_neighbors.insert(Direction::East, vec![Tile::Water, Tile::Sand]);
+    water_neighbors.insert(Direction::West, vec![Tile::Water, Tile::Sand]);
+
+    let mut sand_neighbors = HashMap::new();
+    sand_neighbors.insert(Direction::North, vec![Tile::Grass, Tile::Water, Tile::Sand]);
+    sand_neighbors.insert(Direction::South, vec![Tile::Grass, Tile::Water, Tile::Sand]);
+    sand_neighbors.insert(Direction::East, vec![Tile::Grass, Tile::Water, Tile::Sand]);
+    sand_neighbors.insert(Direction::West, vec![Tile::Grass, Tile::Water, Tile::Sand]);
+
     vec![
-        Constraint::new(Tile::Grass, vec![Tile::Grass, Tile::Sand]),
-        Constraint::new(Tile::Water, vec![Tile::Water, Tile::Sand]),
-        Constraint::new(Tile::Sand, vec![Tile::Grass, Tile::Water, Tile::Sand]),
+        Constraint::new(Tile::Grass, grass_neighbors),
+        Constraint::new(Tile::Water, water_neighbors),
+        Constraint::new(Tile::Sand, sand_neighbors),
     ]
 }
 
@@ -141,7 +168,7 @@ impl Cell {
 
 struct Grid {
     cells: Vec<Vec<Cell>>,
-    constraints: HashMap<Tile, HashSet<Tile>>,
+    constraints: HashMap<Tile, Constraint>,
 }
 
 impl Grid {
@@ -149,10 +176,7 @@ impl Grid {
         let possible_tiles: Vec<Tile> = constraints.iter().map(|c| c.tile).collect();
         let mut constraint_map = HashMap::new();
         for constraint in constraints {
-            constraint_map.insert(
-                constraint.tile,
-                constraint.allowed_neighbors.iter().cloned().collect(),
-            );
+            constraint_map.insert(constraint.tile, constraint);
         }
         Grid {
             cells: vec![vec![Cell::new(&possible_tiles); height]; width],
@@ -188,19 +212,22 @@ impl Grid {
     }
 
     fn propagate(&mut self, x: usize, y: usize, tile: Tile) {
-        let neighbors = vec![
-            (x.wrapping_sub(1), y),
-            (x + 1, y),
-            (x, y.wrapping_sub(1)),
-            (x, y + 1),
+        let directions = vec![
+            (x.wrapping_sub(1), y, Direction::West),
+            (x + 1, y, Direction::East),
+            (x, y.wrapping_sub(1), Direction::South),
+            (x, y + 1, Direction::North),
         ];
 
-        for (nx, ny) in neighbors {
+        for (nx, ny, direction) in directions {
             if nx < WIDTH && ny < HEIGHT {
-                let allowed_neighbors = &self.constraints[&tile];
-                self.cells[nx][ny]
-                    .possibilities
-                    .retain(|&neighbor| allowed_neighbors.contains(&neighbor));
+                if let Some(allowed_neighbors) =
+                    self.constraints[&tile].allowed_neighbors.get(&direction)
+                {
+                    self.cells[nx][ny]
+                        .possibilities
+                        .retain(|&neighbor| allowed_neighbors.contains(&neighbor));
+                }
             }
         }
     }
