@@ -4,8 +4,8 @@ use rand::{seq::IteratorRandom, thread_rng};
 use std::collections::{HashMap, HashSet};
 
 // Constants
-const WIDTH: usize = 3;
-const HEIGHT: usize = 3;
+const WIDTH: usize = 5;
+const HEIGHT: usize = 5;
 const TILE_SIZE: f32 = 16.0;
 
 // Plugin Definition
@@ -31,27 +31,24 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 
     let mut tile_storage = TileStorage::empty(tilemap_size);
 
-    let constraints = TileConstraints::from_pattern(&vec![
-        vec![
-            Tile::GrassCornerTopLeft,
-            Tile::GrassSideTop,
-            Tile::GrassCornerTopRight,
-        ],
-        vec![Tile::GrassSideLeft, Tile::Grass, Tile::GrassSideRight],
-        vec![
-            Tile::GrassCornerBottomLeft,
-            Tile::GrassSideBottom,
-            Tile::GrassCornerBottomRight,
-        ],
+    let grass_constraints = TileConstraints::from_pattern(&vec![
+        vec![Tile::GrassCornerTopLeft, Tile::GrassSideTop, Tile::GrassSideTop, Tile::GrassCornerTopRight],
+        vec![Tile::GrassSideLeft, Tile::Grass, Tile::Grass, Tile::GrassSideRight],
+        vec![Tile::GrassSideLeft, Tile::Grass, Tile::Grass, Tile::GrassSideRight],
+        vec![Tile::GrassCornerBottomLeft, Tile::GrassSideBottom, Tile::GrassSideBottom, Tile::GrassCornerBottomRight],
     ]);
 
+    let empty_constraints = TileConstraints::from_pattern(&vec![vec![Tile::Empty]]);
+
+    let constraints = grass_constraints.concat(&empty_constraints);
+    dbg!(&constraints);
+
     let mut grid = Grid::new(constraints.clone());
-    grid.run();
 
     // Just keep trying if it doesn't collapse
-    // while !grid.run() {
-        // grid = Grid::new(constraints.clone());
-    // }
+    while !grid.run() {
+        grid = Grid::new(constraints.clone());
+    }
 
     // Display the grid for debugging
     println!("Final result :)");
