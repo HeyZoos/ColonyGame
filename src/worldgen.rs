@@ -97,7 +97,7 @@ fn patterns(pattern: Vec<u8>) -> OverlappingPatterns<u8> {
     let grid = Grid::new_iterator(Size::new(sqrt, sqrt), pattern.into_iter());
     OverlappingPatterns::new(
         grid,
-        std::num::NonZeroU32::new(2).unwrap(),
+        std::num::NonZeroU32::new(3).unwrap(),
         &[wfc::Orientation::Original]
     )
 }
