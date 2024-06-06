@@ -72,13 +72,6 @@ fn populate_tilemap(
     tilemap_entity: Entity,
     patterns: OverlappingPatterns<u8>
 ) {
-    let map = |tile: u8| match tile {
-        0 => 12, // Grass
-        1 => 13, // Sand
-        2 => 22, // Water
-        _ => 100 // Unknown
-    };
-    
     for coordinate in wave.grid().coord_iter() {
         let cell =  wave.grid().get(coordinate).unwrap();
         let id = cell.chosen_pattern_id().unwrap();
@@ -88,7 +81,7 @@ fn populate_tilemap(
         let tile = commands
             .spawn(TileBundle {
                 position: tile_pos,
-                texture_index: TileTextureIndex(map(*value)),
+                texture_index: TileTextureIndex(*value as u32),
                 tilemap_id: TilemapId(tilemap_entity),
                 ..Default::default()
             })
