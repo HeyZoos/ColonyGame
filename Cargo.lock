@@ -559,11 +559,13 @@ dependencies = [
  "bevy_kira_audio",
  "bevy_pancam",
  "embed-resource",
+ "grid_2d",
  "image",
  "nutype",
  "rand",
  "rand_chacha",
  "webbrowser",
+ "wfc",
  "winit",
 ]
 
@@ -1051,7 +1053,7 @@ dependencies = [
  "ahash",
  "bevy_utils_proc_macros",
  "getrandom",
- "hashbrown",
+ "hashbrown 0.14.3",
  "nonmax",
  "petgraph",
  "smallvec",
@@ -1456,6 +1458,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "coord_2d"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1020a2ed8bf43fc850b01db7570c0e4194d3e3d8d806a5f1857d2ab15feec57"
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1600,6 +1608,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "direction"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c56672976b806b6fe8e41998c6d0503cd02479c6059c47451ce8addc7871271"
+dependencies = [
+ "coord_2d",
 ]
 
 [[package]]
@@ -2056,7 +2073,7 @@ checksum = "cc11df1ace8e7e564511f53af41f3e42ddc95b56fd07b3f4445d2a6048bc682c"
 dependencies = [
  "bitflags 2.5.0",
  "gpu-descriptor-types",
- "hashbrown",
+ "hashbrown 0.14.3",
 ]
 
 [[package]]
@@ -2075,6 +2092,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eec1c01eb1de97451ee0d60de7d81cf1e72aabefb021616027f3d1c3ec1c723c"
 
 [[package]]
+name = "grid_2d"
+version = "0.15.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6dfb23b456edfd3f388df8047a84a367a1168f4606bc21fe1e5dc9606a23689b"
+dependencies = [
+ "coord_2d",
+]
+
+[[package]]
 name = "guillotiere"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2082,6 +2108,15 @@ checksum = "b62d5865c036cb1393e23c50693df631d3f5d7bcca4c04fe4cc0fd592e74a782"
 dependencies = [
  "euclid",
  "svg_fmt",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
+dependencies = [
+ "ahash",
 ]
 
 [[package]]
@@ -2182,7 +2217,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "168fb715dda47215e360912c096649d23d58bf392ac62f73919e831745e40f26"
 dependencies = [
  "equivalent",
- "hashbrown",
+ "hashbrown 0.14.3",
 ]
 
 [[package]]
@@ -3812,6 +3847,20 @@ dependencies = [
  "raw-window-handle 0.5.2",
  "url",
  "web-sys",
+]
+
+[[package]]
+name = "wfc"
+version = "0.10.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f2e3d966729ec64112a2167bfd6237f449e2445b70c4f7547916707fc684b11"
+dependencies = [
+ "coord_2d",
+ "direction",
+ "getrandom",
+ "grid_2d",
+ "hashbrown 0.13.2",
+ "rand",
 ]
 
 [[package]]

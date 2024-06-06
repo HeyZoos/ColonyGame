@@ -74,6 +74,8 @@ image = { version = "0.24", default-features = false }
 bevy_pancam = "0.11.1"
 rand_chacha = "0.3.1"
 nutype = "0.4.2"
+wfc = "0.10.7"
+grid_2d = "0.15.3"
 
 [build-dependencies]
 embed-resource = "1"
