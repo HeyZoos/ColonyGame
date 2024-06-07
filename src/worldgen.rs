@@ -1,13 +1,15 @@
+use std::path::PathBuf;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
-use rand::SeedableRng;
+use rand::{SeedableRng, thread_rng};
 use rand_chacha::ChaCha8Rng;
+use tiled::TileLayer;
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
-const WIDTH: u32 = 128;
-const HEIGHT: u32 = 128;
+const WIDTH: u32 = 64;
+const HEIGHT: u32 = 64;
 const TILE_SIZE: f32 = 16.0;
 
 pub struct WorldgenPlugin;
@@ -20,7 +22,36 @@ impl Plugin for WorldgenPlugin {
 }
 
 fn startup(mut commands: Commands, assets: Res<AssetServer>) {
-    let texture_handle = assets.load("grass.png");
+    // Load hand-crafted pattern made in the Tiled editor
+    let mut tiled_loader = tiled::Loader::new();
+
+    // Note that this tilemap needs to be a square
+    let tiled_map = tiled_loader.load_tmx_map("assets/patterns.tmx").unwrap();
+
+    // Extract the first layer
+    let tiled_map_first_layer: TileLayer = tiled_map.get_layer(0).unwrap().as_tile_layer().unwrap();
+
+    // Convert the layer to a Vec<u8> which can be used by the wave function collapse algorithm
+    let mut pattern = vec![];
+    for y in (0..tiled_map_first_layer.height().unwrap()).rev()  {
+        for x in 0..tiled_map_first_layer.width().unwrap() {
+           if let Some(tile) = tiled_map_first_layer.get_tile(x as i32, y as i32) {
+               pattern.push(tile.id() as u8);
+           } else {
+               pattern.push(44);
+           }
+       }
+    }
+
+    // Get the tileset asset path
+    let tileset = tiled_map.tilesets()[0].as_ref();
+    let tileset_image = tileset.image.as_ref().expect("Image not found");
+    let mut tileset_image_path = tileset_image.source.clone();
+
+    // Remove the "assets" prefix
+    tileset_image_path = PathBuf::from(tileset_image_path.strip_prefix("assets").unwrap());
+
+    let texture_handle = assets.load(tileset_image_path);
 
     let tilemap_size = TilemapSize {
         x: WIDTH,
@@ -29,19 +60,6 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 
     let tilemap_entity = commands.spawn_empty().id();
     let mut tile_storage = TileStorage::empty(tilemap_size);
-
-    let pattern = vec![
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 1, 1, 1, 1, 2, 1, 1, 1, 2, 
-        2, 1, 0, 0, 1, 2, 1, 0, 1, 2,
-        2, 1, 0, 0, 1, 2, 1, 1, 1, 2, 
-        2, 1, 1, 1, 1, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2
-    ];
 
     let wave = wfc(patterns(pattern.clone()), 3);
     populate_tilemap(&mut commands, &mut tile_storage, &wave, tilemap_entity, patterns(pattern.clone()));
@@ -97,20 +115,21 @@ fn patterns(pattern: Vec<u8>) -> OverlappingPatterns<u8> {
     let grid = Grid::new_iterator(Size::new(sqrt, sqrt), pattern.into_iter());
     OverlappingPatterns::new(
         grid,
-        std::num::NonZeroU32::new(3).unwrap(),
+        std::num::NonZeroU32::new(2).unwrap(),
         &[wfc::Orientation::Original]
     )
 }
 
 // OverlappingPatterns<u8>, u64 -> Wave
 fn wfc(patterns: OverlappingPatterns<u8>, seed: u64) -> Wave {
-    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    // let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut rng = thread_rng();
     let global_stats = patterns.global_stats();
 
     let runner = wfc::RunOwn::new_wrap_forbid(
         Size::new(WIDTH, HEIGHT),
         &global_stats,
-        wfc::wrap::WrapXY,
+        wfc::wrap::WrapNone,
         wfc::ForbidNothing,
         &mut rng,
     );
