@@ -28,58 +28,53 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     // Note that this tilemap needs to be a square
     let tiled_map = tiled_loader.load_tmx_map("assets/patterns.tmx").unwrap();
 
-    // Extract the first layer
-    let tiled_map_first_layer: TileLayer = tiled_map.get_layer(0).unwrap().as_tile_layer().unwrap();
+    // For each tilemap layer
+    for layer in tiled_map.layers() {
 
-    // Convert the layer to a Vec<u8> which can be used by the wave function collapse algorithm
-    let mut pattern = vec![];
-    for y in (0..tiled_map_first_layer.height().unwrap()).rev()  {
-        for x in 0..tiled_map_first_layer.width().unwrap() {
-           if let Some(tile) = tiled_map_first_layer.get_tile(x as i32, y as i32) {
-               pattern.push(tile.id() as u8);
-           } else {
-               pattern.push(44);
-           }
-       }
+        // Convert the layer to a tile layer
+        let tile_layer = layer.as_tile_layer().unwrap();
+
+        // Convert the tile layer to a Vec<u8> which for wave function collapse
+        let mut pattern = vec![];
+        for y in (0..tile_layer.height().unwrap()).rev()  {
+            for x in 0..tile_layer.width().unwrap() {
+                if let Some(tile) = tile_layer.get_tile(x as i32, y as i32) {
+                    pattern.push(tile.id() as u8);
+                } else {
+                    pattern.push(100);
+                }
+            }
+        }
+
+        // Run wave function collapse
+        let wave = wfc(patterns(pattern.clone()), 3);
+        
+        // Get the tileset asset
+        let tileset = tiled_map.tilesets()[0].as_ref();
+        let tileset_image = tileset.image.as_ref().expect("Image not found");
+        let mut tileset_image_path = tileset_image.source.clone();
+        tileset_image_path = PathBuf::from(tileset_image_path.strip_prefix("assets").unwrap());
+        let texture_handle = assets.load(tileset_image_path);
+
+        // Build tilemap based on WFC results
+        let tilemap_size = TilemapSize { x: WIDTH, y: HEIGHT, };
+        let tilemap_entity = commands.spawn_empty().id();
+        let mut tile_storage = TileStorage::empty(tilemap_size);
+        populate_tilemap(&mut commands, &mut tile_storage, &wave, tilemap_entity, patterns(pattern.clone()));
+        let tile_size = TilemapTileSize { x: TILE_SIZE, y: TILE_SIZE, };
+        let grid_size = tile_size.into();
+        let map_type = TilemapType::default();
+        commands.entity(tilemap_entity).insert(TilemapBundle {
+            grid_size,
+            map_type,
+            size: tilemap_size,
+            storage: tile_storage,
+            texture: TilemapTexture::Single(texture_handle),
+            tile_size,
+            transform: get_tilemap_center_transform(&tilemap_size, &grid_size, &map_type, 0.0),
+            ..Default::default()
+        });
     }
-
-    // Get the tileset asset path
-    let tileset = tiled_map.tilesets()[0].as_ref();
-    let tileset_image = tileset.image.as_ref().expect("Image not found");
-    let mut tileset_image_path = tileset_image.source.clone();
-
-    // Remove the "assets" prefix
-    tileset_image_path = PathBuf::from(tileset_image_path.strip_prefix("assets").unwrap());
-
-    let texture_handle = assets.load(tileset_image_path);
-
-    let tilemap_size = TilemapSize {
-        x: WIDTH,
-        y: HEIGHT,
-    };
-
-    let tilemap_entity = commands.spawn_empty().id();
-    let mut tile_storage = TileStorage::empty(tilemap_size);
-
-    let wave = wfc(patterns(pattern.clone()), 3);
-    populate_tilemap(&mut commands, &mut tile_storage, &wave, tilemap_entity, patterns(pattern.clone()));
-    let tile_size = TilemapTileSize {
-        x: TILE_SIZE,
-        y: TILE_SIZE,
-    };
-    let grid_size = tile_size.into();
-    let map_type = TilemapType::default();
-
-    commands.entity(tilemap_entity).insert(TilemapBundle {
-        grid_size,
-        map_type,
-        size: tilemap_size,
-        storage: tile_storage,
-        texture: TilemapTexture::Single(texture_handle),
-        tile_size,
-        transform: get_tilemap_center_transform(&tilemap_size, &grid_size, &map_type, 0.0),
-        ..Default::default()
-    });
 }
 
 // Populate Tilemap Function
