@@ -2,9 +2,10 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
+use image::imageops::tile;
 use rand::{SeedableRng, thread_rng};
 use rand_chacha::ChaCha8Rng;
-use tiled::TileLayer;
+use tiled::{TileLayer, Tileset};
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
@@ -30,9 +31,20 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 
     // For each tilemap layer
     for layer in tiled_map.layers() {
+        println!("Generating {} layer", layer.name);
 
         // Convert the layer to a tile layer
         let tile_layer = layer.as_tile_layer().unwrap();
+
+        // Each layer should only reference ONE tileset
+        let mut tileset = tiled_map.tilesets()[0].as_ref();
+        for ts in tiled_map.tilesets() {
+            dbg!(&ts.name);
+            dbg!(&layer.name);
+            if ts.name == layer.name {
+                tileset = ts;
+            }
+        }
 
         // Convert the tile layer to a Vec<u8> which for wave function collapse
         let mut pattern = vec![];
@@ -40,6 +52,7 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
             for x in 0..tile_layer.width().unwrap() {
                 if let Some(tile) = tile_layer.get_tile(x as i32, y as i32) {
                     pattern.push(tile.id() as u8);
+                    tileset = tile.get_tileset();
                 } else {
                     pattern.push(100);
                 }
@@ -48,10 +61,10 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 
         // Run wave function collapse
         let wave = wfc(patterns(pattern.clone()), 3);
-        
+
         // Get the tileset asset
-        let tileset = tiled_map.tilesets()[0].as_ref();
         let tileset_image = tileset.image.as_ref().expect("Image not found");
+        println!("Loaded tileset {} for layer {}", tileset.name, layer.name);
         let mut tileset_image_path = tileset_image.source.clone();
         tileset_image_path = PathBuf::from(tileset_image_path.strip_prefix("assets").unwrap());
         let texture_handle = assets.load(tileset_image_path);
