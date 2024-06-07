@@ -1,11 +1,10 @@
 use std::path::PathBuf;
+
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
-use image::imageops::tile;
-use rand::{SeedableRng, thread_rng};
+use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use tiled::{TileLayer, Tileset};
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
@@ -30,21 +29,15 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     let tiled_map = tiled_loader.load_tmx_map("assets/patterns.tmx").unwrap();
 
     // For each tilemap layer
-    for layer in tiled_map.layers() {
+    for layer_idx in (0..tiled_map.layers().len()).rev() {
+        let layer = tiled_map.layers().nth(layer_idx).unwrap();
         println!("Generating {} layer", layer.name);
 
         // Convert the layer to a tile layer
         let tile_layer = layer.as_tile_layer().unwrap();
 
-        // Each layer should only reference ONE tileset
+        // Each layer should only reference the master tileset
         let mut tileset = tiled_map.tilesets()[0].as_ref();
-        for ts in tiled_map.tilesets() {
-            dbg!(&ts.name);
-            dbg!(&layer.name);
-            if ts.name == layer.name {
-                tileset = ts;
-            }
-        }
 
         // Convert the tile layer to a Vec<u8> which for wave function collapse
         let mut pattern = vec![];
@@ -54,7 +47,7 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
                     pattern.push(tile.id() as u8);
                     tileset = tile.get_tileset();
                 } else {
-                    pattern.push(100);
+                    pattern.push(255);
                 }
             }
         }
@@ -130,8 +123,7 @@ fn patterns(pattern: Vec<u8>) -> OverlappingPatterns<u8> {
 
 // OverlappingPatterns<u8>, u64 -> Wave
 fn wfc(patterns: OverlappingPatterns<u8>, seed: u64) -> Wave {
-    // let mut rng = ChaCha8Rng::seed_from_u64(seed);
-    let mut rng = thread_rng();
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
     let global_stats = patterns.global_stats();
 
     let runner = wfc::RunOwn::new_wrap_forbid(
