@@ -3,7 +3,8 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
-use rand::SeedableRng;
+use rand::prelude::SliceRandom;
+use rand::{SeedableRng, thread_rng};
 use rand_chacha::ChaCha8Rng;
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
@@ -92,19 +93,28 @@ fn populate_tilemap(
     for coordinate in wave.grid().coord_iter() {
         let cell =  wave.grid().get(coordinate).unwrap();
         let id = cell.chosen_pattern_id().unwrap();
-        let value = patterns.pattern_top_left_value(id);
+        let value = variants(*patterns.pattern_top_left_value(id));
         let tile_pos = TilePos { x: coordinate.x as u32, y: coordinate.y as u32 };
         
         let tile = commands
             .spawn(TileBundle {
                 position: tile_pos,
-                texture_index: TileTextureIndex(*value as u32),
+                texture_index: TileTextureIndex(value as u32),
                 tilemap_id: TilemapId(tilemap_entity),
                 ..Default::default()
             })
             .id();
         
         tile_storage.set(&tile_pos, tile);
+    }
+}
+
+fn variants(tilemap_idx: u8) -> u8 {
+    let mut rng = thread_rng();
+    // If a value is grass, randomly choose one of the variants
+    match tilemap_idx {
+        17 => *[17, 80, 81, 82, 83, 84, 85, 96, 97, 98, 99, 100, 101].choose(&mut rng).unwrap() as u8,
+        _ => tilemap_idx
     }
 }
 
