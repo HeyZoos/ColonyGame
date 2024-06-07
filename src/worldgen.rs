@@ -31,7 +31,6 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     // For each tilemap layer
     for layer_idx in (0..tiled_map.layers().len()).rev() {
         let layer = tiled_map.layers().nth(layer_idx).unwrap();
-        println!("Generating {} layer", layer.name);
 
         // Convert the layer to a tile layer
         let tile_layer = layer.as_tile_layer().unwrap();
@@ -57,7 +56,6 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 
         // Get the tileset asset
         let tileset_image = tileset.image.as_ref().expect("Image not found");
-        println!("Loaded tileset {} for layer {}", tileset.name, layer.name);
         let mut tileset_image_path = tileset_image.source.clone();
         tileset_image_path = PathBuf::from(tileset_image_path.strip_prefix("assets").unwrap());
         let texture_handle = assets.load(tileset_image_path);
