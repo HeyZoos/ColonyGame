@@ -75,7 +75,7 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
             storage: tile_storage,
             texture: TilemapTexture::Single(texture_handle),
             tile_size,
-            transform: get_tilemap_center_transform(&tilemap_size, &grid_size, &map_type, 0.0),
+            transform: get_tilemap_center_transform(&tilemap_size, &grid_size, &map_type, layer_idx as f32),
             ..Default::default()
         });
     }
