@@ -96,19 +96,27 @@ fn populate_tilemap(
         let value = variants(*patterns.pattern_top_left_value(id));
         let tile_pos = TilePos { x: coordinate.x as u32, y: coordinate.y as u32 };
         
-        let tile = commands
+        let mut tile = commands
             .spawn(TileBundle {
                 position: tile_pos,
                 texture_index: TileTextureIndex(value as u32),
                 tilemap_id: TilemapId(tilemap_entity),
                 ..Default::default()
-            })
-            .id();
+            });
         
-        tile_storage.set(&tile_pos, tile);
+        if value == 128 {
+            tile.insert(AnimatedTile {
+                start: 128,
+                end: 131,
+                speed: 0.5
+            });
+        }
+        
+        tile_storage.set(&tile_pos, tile.id());
     }
 }
 
+// u8 -> u8
 fn variants(tilemap_idx: u8) -> u8 {
     let mut rng = thread_rng();
     // If a value is grass, randomly choose one of the variants
