@@ -9,8 +9,8 @@ use rand_chacha::ChaCha8Rng;
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
-const WIDTH: u32 = 64;
-const HEIGHT: u32 = 64;
+const WIDTH: u32 = 256;
+const HEIGHT: u32 = 256;
 const TILE_SIZE: f32 = 16.0;
 
 pub struct WorldgenPlugin;
