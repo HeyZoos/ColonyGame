@@ -121,7 +121,11 @@ fn variants(tilemap_idx: u16) -> u16 {
     let mut rng = thread_rng();
     // If a value is grass, randomly choose one of the variants
     match tilemap_idx {
-        17 => *[17, 80, 81, 82, 83, 84, 85, 96, 97, 98, 99, 100, 101].choose(&mut rng).unwrap() as u16,
+        17 => *[
+            17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+            17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+            17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, // Weight the plain grass tile more heavily
+            85, 96, 97, 98, 99, 100, 101].choose(&mut rng).unwrap() as u16,
         _ => tilemap_idx
     }
 }
