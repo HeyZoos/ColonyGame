@@ -8,12 +8,12 @@ pub struct VillagerPlugin;
 impl Plugin for VillagerPlugin {
 	fn build(&self, app: &mut App) {
 		app
-            .add_systems(Startup, startup)
+            .add_systems(PostStartup, post_startup)
 			.add_systems(Update, animate_sprite);
 	}
 }
 
-fn startup(
+fn post_startup(
 	mut cmds: Commands, 
     assets: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
@@ -21,11 +21,11 @@ fn startup(
 ) {
 	// Load the character sprite sheet
 	let texture: Handle<Image> = assets.load("character.png");
-	
+
     // Create a TextureAtlas from the sprite sheet
     let layout = TextureAtlasLayout::from_grid(
-    	Vec2::new(48.0, 48.0), 
-    	8, 
+    	Vec2::new(48.0, 48.0),
+    	8,
     	24,
     	None,
     	None
@@ -62,12 +62,14 @@ fn startup(
             ];
 
             next_coords.retain(|&coord| {
-                world.wave.grid()
-                    .get(coord).unwrap()
-                    .chosen_pattern_id().unwrap() != 255
+                if let Some(cell) = world.wave.grid().get(coord) {
+                    cell.chosen_pattern_id().unwrap() != 255
+                } else {
+                    false
+                }
             });
 
-            next_coords.iter().map(|c| (c, 1)).collect()
+            next_coords.into_iter().map(|c| (c, 1))
         },
         /* heuristic */ |coord| {
             coord.distance2(goal) / 3
