@@ -1,6 +1,7 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod villager;
 mod worldgen;
 
 use bevy::asset::AssetMetaCheck;
@@ -12,6 +13,7 @@ use bevy_game::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
 use bevy_pancam::PanCamPlugin;
 use std::io::Cursor;
 use winit::window::Icon;
+use villager::VillagerPlugin;
 use worldgen::WorldgenPlugin;
 
 fn main() {
@@ -35,6 +37,7 @@ fn main() {
         ))
         .add_plugins(GamePlugin)
         .add_plugins(WorldgenPlugin)
+        .add_plugins(VillagerPlugin)
         .add_systems(Startup, set_window_icon)
         .run();
 }
