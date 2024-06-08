@@ -78,7 +78,7 @@ fn post_startup(
         animation_indices,
         AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating)),
         // Assign the path to a villager
-        Speed(1.0),
+        Speed(8.0),
         Pathfinder::new(result.unwrap().0)
     ));
 }
@@ -132,34 +132,30 @@ fn pathfinding(
         let delta = time.delta_seconds();
 
         if let Some(current_target) = pathfinder.current_target {
+            // Convert tile coordinates to world coordinates by multiplying by 16
+            let target_x = current_target.x as f32 * 16.0;
+            let target_y = current_target.y as f32 * 16.0;
+
             // Check if we have reached the current target
-            if (transform.translation.x - current_target.x as f32).abs() < 0.1 &&
-                (transform.translation.y - current_target.y as f32).abs() < 0.1 {
+            if (transform.translation.x - target_x).abs() < 0.1 &&
+                (transform.translation.y - target_y).abs() < 0.1 {
                 // Move to the next target in the path
                 pathfinder.path.remove(0);
                 pathfinder.current_target = pathfinder.path.first().cloned();
             }
 
             // Calculate the direction vector towards the current target
-            let direction = Coord {
-                x: current_target.x - transform.translation.x as i32,
-                y: current_target.y - transform.translation.y as i32,
-            };
+            let direction_x = target_x - transform.translation.x;
+            let direction_y = target_y - transform.translation.y;
 
-            // Normalize the directions
-            let length = ((direction.x.pow(2) + direction.y.pow(2)) as f32).sqrt() as i32;
-            let direction = if length != 0 {
-                Coord {
-                    x: direction.x / length,
-                    y: direction.y / length,
-                }
-            } else {
-                direction
-            };
+            // Normalize the direction
+            let length = (direction_x.powi(2) + direction_y.powi(2)).sqrt();
+            let direction_x = if length != 0.0 { direction_x / length } else { 0.0 };
+            let direction_y = if length != 0.0 { direction_y / length } else { 0.0 };
 
             // Move the villager towards the current target
-            transform.translation.x += direction.x as f32 * speed.0 * delta;
-            transform.translation.y += direction.y as f32 * speed.0 * delta;
+            transform.translation.x += direction_x * speed.0 * delta;
+            transform.translation.y += direction_y * speed.0 * delta;
         }
     }
 }
