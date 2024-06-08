@@ -1,5 +1,4 @@
 use crate::actions::Actions;
-use crate::loading::TextureAssets;
 use crate::GameState;
 use bevy::prelude::*;
 
@@ -17,14 +16,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
-    commands
-        .spawn(SpriteBundle {
-            texture: textures.bevy.clone(),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
-            ..Default::default()
-        })
-        .insert(Player);
+fn spawn_player() {
 }
 
 fn move_player(

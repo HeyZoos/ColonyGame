@@ -36,52 +36,11 @@ struct Menu;
 fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
     info!("menu");
     commands
-        .spawn(Camera2dBundle::default())
+        .spawn(Camera2dBundle {
+            transform: Transform::from_xyz(0.0, 0.0, 5.0),
+            ..default()
+        })
         .insert(PanCam::default());
-    commands
-        .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    flex_direction: FlexDirection::Column,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
-                ..default()
-            },
-            Menu,
-        ))
-        .with_children(|children| {
-            let button_colors = ButtonColors::default();
-            children
-                .spawn((
-                    ButtonBundle {
-                        style: Style {
-                            width: Val::Px(140.0),
-                            height: Val::Px(50.0),
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            ..Default::default()
-                        },
-                        background_color: button_colors.normal.into(),
-                        ..Default::default()
-                    },
-                    button_colors,
-                    ChangeState(GameState::Playing),
-                ))
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Play",
-                        TextStyle {
-                            font_size: 40.0,
-                            color: Color::rgb(0.9, 0.9, 0.9),
-                            ..default()
-                        },
-                    ));
-                });
-        });
     commands
         .spawn((
             NodeBundle {
