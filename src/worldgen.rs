@@ -22,6 +22,11 @@ impl Plugin for WorldgenPlugin {
     }
 }
 
+#[derive(Resource)]
+pub struct World {
+    pub wave: Wave
+}
+
 fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     // Load hand-crafted pattern made in the Tiled editor
     let mut tiled_loader = tiled::Loader::new();
@@ -66,6 +71,10 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
         let tilemap_entity = commands.spawn_empty().id();
         let mut tile_storage = TileStorage::empty(tilemap_size);
         populate_tilemap(&mut commands, &mut tile_storage, &wave, tilemap_entity, patterns(pattern.clone()));
+
+        // Store the wave as a resource for use in pathfinding and post-processing
+        commands.insert_resource(World { wave });
+
         let tile_size = TilemapTileSize { x: TILE_SIZE, y: TILE_SIZE, };
         let grid_size = tile_size.into();
         let map_type = TilemapType::default();

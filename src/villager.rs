@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use grid_2d::Coord;
+use pathfinding::prelude::astar;
 use std::time::Duration;
 
 pub struct VillagerPlugin;
@@ -14,7 +16,8 @@ impl Plugin for VillagerPlugin {
 fn startup(
 	mut cmds: Commands, 
     assets: Res<AssetServer>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    world: Res<crate::worldgen::World>
 ) {
 	// Load the character sprite sheet
 	let texture: Handle<Image> = assets.load("character.png");
@@ -46,6 +49,33 @@ fn startup(
         animation_indices,
     	AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating))
     ));
+
+    let goal = Coord { x: 5, y : 5 };
+    let result = astar(
+        /* start */ &grid_2d::Coord { x: 0, y: 0 },
+        /* successors */ |&Coord { x, y }| {
+            let mut next_coords = vec![
+                Coord { x: x + 1, y },
+                Coord { x: x - 1, y },
+                Coord { x, y: y + 1 },
+                Coord { x, y: y - 1 }
+            ];
+
+            next_coords.retain(|&coord| {
+                world.wave.grid()
+                    .get(coord).unwrap()
+                    .chosen_pattern_id().unwrap() != 255
+            });
+
+            next_coords.iter().map(|c| (c, 1)).collect()
+        },
+        /* heuristic */ |coord| {
+            coord.distance2(goal) / 3
+        },
+        /* success */ |coord| {
+            *coord == goal
+        });
+    dbg!(result);
 }
 
 #[derive(Component)]
