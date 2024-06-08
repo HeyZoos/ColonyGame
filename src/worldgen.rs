@@ -39,12 +39,12 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
         // Each layer should only reference the master tileset
         let mut tileset = tiled_map.tilesets()[0].as_ref();
 
-        // Convert the tile layer to a Vec<u8> which for wave function collapse
+        // Convert the tile layer to a Vec<u16> which for wave function collapse
         let mut pattern = vec![];
         for y in (0..tile_layer.height().unwrap()).rev()  {
             for x in 0..tile_layer.width().unwrap() {
                 if let Some(tile) = tile_layer.get_tile(x as i32, y as i32) {
-                    pattern.push(tile.id() as u8);
+                    pattern.push(tile.id() as u16);
                     tileset = tile.get_tileset();
                 } else {
                     pattern.push(255);
@@ -88,7 +88,7 @@ fn populate_tilemap(
     tile_storage: &mut TileStorage,
     wave: &Wave,
     tilemap_entity: Entity,
-    patterns: OverlappingPatterns<u8>
+    patterns: OverlappingPatterns<u16>
 ) {
     for coordinate in wave.grid().coord_iter() {
         let cell =  wave.grid().get(coordinate).unwrap();
@@ -116,18 +116,18 @@ fn populate_tilemap(
     }
 }
 
-// u8 -> u8
-fn variants(tilemap_idx: u8) -> u8 {
+// u16 -> u16
+fn variants(tilemap_idx: u16) -> u16 {
     let mut rng = thread_rng();
     // If a value is grass, randomly choose one of the variants
     match tilemap_idx {
-        17 => *[17, 80, 81, 82, 83, 84, 85, 96, 97, 98, 99, 100, 101].choose(&mut rng).unwrap() as u8,
+        17 => *[17, 80, 81, 82, 83, 84, 85, 96, 97, 98, 99, 100, 101].choose(&mut rng).unwrap() as u16,
         _ => tilemap_idx
     }
 }
 
-// Vec<u8> -> OverlappingPatterns<u8>
-fn patterns(pattern: Vec<u8>) -> OverlappingPatterns<u8> {
+// Vec<u16> -> OverlappingPatterns<u16>
+fn patterns(pattern: Vec<u16>) -> OverlappingPatterns<u16> {
     let sqrt = (pattern.len() as f64).sqrt() as u32;
     let grid = Grid::new_iterator(Size::new(sqrt, sqrt), pattern.into_iter());
     OverlappingPatterns::new(
@@ -137,8 +137,8 @@ fn patterns(pattern: Vec<u8>) -> OverlappingPatterns<u8> {
     )
 }
 
-// OverlappingPatterns<u8>, u64 -> Wave
-fn wfc(patterns: OverlappingPatterns<u8>, seed: u64) -> Wave {
+// OverlappingPatterns<u16>, u64 -> Wave
+fn wfc(patterns: OverlappingPatterns<u16>, seed: u64) -> Wave {
     let mut rng = ChaCha8Rng::seed_from_u64(seed);
     let global_stats = patterns.global_stats();
 
