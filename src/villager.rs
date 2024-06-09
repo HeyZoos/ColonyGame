@@ -122,12 +122,48 @@ pub enum Direction {
 }
 
 impl Direction {
-    fn to_vec2(&self) -> Vec2 {
+    
+    /// Converts a `Direction` to a `Vec2`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bevy::prelude::*;
+    /// use bevy_game::villager::Direction;
+    /// 
+    /// let dir = Direction::Up;
+    /// assert_eq!(dir.to_vec2(), Vec2::new(0.0, 1.0));
+    /// ```
+    pub fn to_vec2(&self) -> Vec2 {
         match self {
             Direction::Up => Vec2::new(0.0, 1.0),
             Direction::Down => Vec2::new(0.0, -1.0),
             Direction::Left => Vec2::new(-1.0, 0.0),
             Direction::Right => Vec2::new(1.0, 0.0),
+        }
+    }
+
+    /// Converts a `Vec2` to a `Direction`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bevy::prelude::*;
+    /// use bevy_game::villager::Direction;
+    /// 
+    /// let vec = Vec2::new(0.0, 1.0);
+    /// assert_eq!(Direction::from_vec2(vec), Some(Direction::Up));
+    ///
+    /// let invalid_vec = Vec2::new(1.0, 1.0);
+    /// assert_eq!(Direction::from_vec2(invalid_vec), None);
+    /// ```
+    pub fn from_vec2(vec: Vec2) -> Option<Self> {
+        match vec {
+            v if v == Vec2::new(0.0, 1.0) => Some(Direction::Up),
+            v if v == Vec2::new(0.0, -1.0) => Some(Direction::Down),
+            v if v == Vec2::new(-1.0, 0.0) => Some(Direction::Left),
+            v if v == Vec2::new(1.0, 0.0) => Some(Direction::Right),
+            _ => None,
         }
     }
 }
