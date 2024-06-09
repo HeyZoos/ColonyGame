@@ -1,5 +1,6 @@
 use crate::animation::AnimationBundle;
 use bevy::prelude::*;
+use extend::ext;
 use grid_2d::Coord;
 use pathfinding::prelude::astar;
 use std::time::Duration;
@@ -133,7 +134,7 @@ impl Direction {
         }
     }
 
-    /// Converts a `Vec2` to a `Direction`.
+    /// Converts a `Vec2` to a `Direction`, rounding the vector components.
     ///
     /// # Examples
     ///
@@ -141,14 +142,14 @@ impl Direction {
     /// use bevy::prelude::*;
     /// use bevy_game::villager::Direction;
     ///
-    /// let vec = Vec2::new(0.0, 1.0);
+    /// let vec = Vec2::new(0.1, 0.9);
     /// assert_eq!(Direction::from_vec2(vec), Some(Direction::Up));
     ///
-    /// let invalid_vec = Vec2::new(1.0, 1.0);
+    /// let invalid_vec = Vec2::new(1.1, 1.1);
     /// assert_eq!(Direction::from_vec2(invalid_vec), None);
     /// ```
     pub fn from_vec2(vec: Vec2) -> Option<Self> {
-        match vec {
+        match vec.round() {
             v if v == Vec2::new(0.0, 1.0) => Some(Direction::Up),
             v if v == Vec2::new(0.0, -1.0) => Some(Direction::Down),
             v if v == Vec2::new(-1.0, 0.0) => Some(Direction::Left),
@@ -161,13 +162,13 @@ impl Direction {
 #[derive(Component)]
 pub struct Movement {
     pub path: Vec<Coord>,
-    pub current_target: Option<Coord>,
+    pub current_target: Option<Vec2>,
     pub direction: Direction,
 }
 
 impl Movement {
     fn new(path: Vec<Coord>) -> Self {
-        let current_target = path.first().cloned();
+        let current_target = path.first().cloned().map(|c| c.to_vec2());
         Movement {
             path,
             current_target,
@@ -177,43 +178,56 @@ impl Movement {
 }
 
 fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &mut Movement)>) {
-    for (mut transform, speed, mut pathfinder) in query.iter_mut() {
+    for (mut transform, speed, mut movement) in query.iter_mut() {
         let delta = time.delta_seconds();
 
-        if let Some(current_target) = pathfinder.current_target {
+        if let Some(mut current_target) = movement.current_target {
             // Convert tile coordinates to world coordinates by multiplying by 16
-            let target_x = current_target.x as f32 * 16.0;
-            let target_y = current_target.y as f32 * 16.0;
+            current_target *= 16.0;
 
             // Check if we have reached the current target
-            if (transform.translation.x - target_x).abs() < 0.1
-                && (transform.translation.y - target_y).abs() < 0.1
-            {
+            if transform.translation.xy().distance(current_target) < 0.1 {
                 // Move to the next target in the path
-                pathfinder.path.remove(0);
-                pathfinder.current_target = pathfinder.path.first().cloned();
+                movement.path.remove(0);
+                movement.current_target = movement.path.first().cloned().map(|c| c.to_vec2());
             }
 
-            // Calculate the direction vector towards the current target
-            let direction_x = target_x - transform.translation.x;
-            let direction_y = target_y - transform.translation.y;
-
-            // Normalize the direction
-            let length = (direction_x.powi(2) + direction_y.powi(2)).sqrt();
-            let direction_x = if length != 0.0 {
-                direction_x / length
-            } else {
-                0.0
-            };
-            let direction_y = if length != 0.0 {
-                direction_y / length
-            } else {
-                0.0
-            };
+            // Calculate and normalize the heading vector towards the current target
+            let heading = (current_target - transform.translation.xy()).normalize_or_zero();
 
             // Move the villager towards the current target
-            transform.translation.x += direction_x * speed.0 * delta;
-            transform.translation.y += direction_y * speed.0 * delta;
+            transform.translation.x += heading.x * speed.0 * delta;
+            transform.translation.y += heading.y * speed.0 * delta;
+
+            if let Some(direction) = Direction::from_vec2(heading) {
+                if movement.direction != direction {
+                    dbg!(heading);
+                    movement.direction = dbg!(direction);
+                }
+            }
+        }
+    }
+}
+
+#[ext]
+pub impl Coord {
+    /// Converts a `Coord` to a `Vec2`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bevy::prelude::*;
+    /// use grid_2d::Coord;
+    /// use bevy_game::villager::CoordExt;
+    ///
+    /// let coord = Coord { x: 3, y: 4 };
+    /// let vec = coord.to_vec2();
+    /// assert_eq!(vec, Vec2::new(3.0, 4.0));
+    /// ```
+    fn to_vec2(&self) -> Vec2 {
+        Vec2 {
+            x: self.x as f32,
+            y: self.y as f32,
         }
     }
 }
