@@ -80,7 +80,7 @@ fn post_startup(
         AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating)),
         // Assign the path to a villager
         Speed(16.0),
-        Pathfinder::new(result.unwrap().0),
+        Movement::new(result.unwrap().0),
         AnimationBundle::default()
     ));
 }
@@ -114,21 +114,21 @@ fn animate_sprite(
 struct Speed(f32);
 
 #[derive(Component)]
-pub struct Pathfinder {
+pub struct Movement {
     pub path: Vec<Coord>,
     pub current_target: Option<Coord>,
 }
 
-impl Pathfinder {
+impl Movement {
     fn new(path: Vec<Coord>) -> Self {
         let current_target = path.first().cloned();
-        Pathfinder { path, current_target }
+        Movement { path, current_target }
     }
 }
 
 fn pathfinding(
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &Speed, &mut Pathfinder)>,
+    mut query: Query<(&mut Transform, &Speed, &mut Movement)>,
 ) {
     for (mut transform, speed, mut pathfinder) in query.iter_mut() {
         let delta = time.delta_seconds();

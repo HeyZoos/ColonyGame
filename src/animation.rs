@@ -1,4 +1,4 @@
-use crate::villager::{AnimationIndices, Pathfinder};
+use crate::villager::{AnimationIndices, Movement};
 use bevy::prelude::*;
 use seldom_state::prelude::*;
 
@@ -40,7 +40,7 @@ impl Default for AnimationBundle {
         let trigger_when_moving_up =
             move |In(entity): In<Entity>,
                   transforms: Query<&Transform>,
-                  pathfinders: Query<&Pathfinder>| {
+                  pathfinders: Query<&Movement>| {
                 let transform = transforms.get(entity).unwrap();
                 let pathfinder = pathfinders.get(entity).unwrap();
                 if let Some(current_target) = pathfinder.current_target {
@@ -62,7 +62,7 @@ impl Default for AnimationBundle {
         let trigger_when_moving_down =
             move |In(entity): In<Entity>,
                   transforms: Query<&Transform>,
-                  pathfinders: Query<&Pathfinder>| {
+                  pathfinders: Query<&Movement>| {
                 let transform = transforms.get(entity).unwrap();
                 let pathfinder = pathfinders.get(entity).unwrap();
                 if let Some(current_target) = pathfinder.current_target {
@@ -84,7 +84,7 @@ impl Default for AnimationBundle {
         let trigger_when_moving_right =
             move |In(entity): In<Entity>,
                   transforms: Query<&Transform>,
-                  pathfinders: Query<&Pathfinder>| {
+                  pathfinders: Query<&Movement>| {
                 let transform = transforms.get(entity).unwrap();
                 let pathfinder = pathfinders.get(entity).unwrap();
                 if let Some(current_target) = pathfinder.current_target {
@@ -106,7 +106,7 @@ impl Default for AnimationBundle {
         let trigger_when_moving_left =
             move |In(entity): In<Entity>,
                   transforms: Query<&Transform>,
-                  pathfinders: Query<&Pathfinder>| {
+                  pathfinders: Query<&Movement>| {
                 let transform = transforms.get(entity).unwrap();
                 let pathfinder = pathfinders.get(entity).unwrap();
                 if let Some(current_target) = pathfinder.current_target {
@@ -125,7 +125,7 @@ impl Default for AnimationBundle {
                 }
             };
 
-        let trigger_when_idle = move |In(entity): In<Entity>, pathfinders: Query<&Pathfinder>| {
+        let trigger_when_idle = move |In(entity): In<Entity>, pathfinders: Query<&Movement>| {
             let pathfinder = pathfinders.get(entity).unwrap();
             pathfinder.current_target.is_none()
         };
