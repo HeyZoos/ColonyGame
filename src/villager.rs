@@ -113,16 +113,36 @@ fn animate_sprite(
 #[derive(Component)]
 struct Speed(f32);
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    fn to_vec2(&self) -> Vec2 {
+        match self {
+            Direction::Up => Vec2::new(0.0, 1.0),
+            Direction::Down => Vec2::new(0.0, -1.0),
+            Direction::Left => Vec2::new(-1.0, 0.0),
+            Direction::Right => Vec2::new(1.0, 0.0),
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct Movement {
     pub path: Vec<Coord>,
     pub current_target: Option<Coord>,
+    pub direction: Direction
 }
 
 impl Movement {
     fn new(path: Vec<Coord>) -> Self {
         let current_target = path.first().cloned();
-        Movement { path, current_target }
+        Movement { path, current_target, direction: Direction::Down }
     }
 }
 
