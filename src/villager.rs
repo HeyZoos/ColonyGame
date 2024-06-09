@@ -11,7 +11,7 @@ impl Plugin for VillagerPlugin {
 		app
             .add_systems(PostStartup, post_startup)
 			.add_systems(Update, animate_sprite)
-            .add_systems(Update, pathfinding);
+            .add_systems(Update, movement_system);
 	}
 }
 
@@ -126,7 +126,7 @@ impl Movement {
     }
 }
 
-fn pathfinding(
+fn movement_system(
     time: Res<Time>,
     mut query: Query<(&mut Transform, &Speed, &mut Movement)>,
 ) {
