@@ -1,4 +1,5 @@
-use crate::villager::{AnimationIndices, Direction, Movement, Vec2Ext};
+use crate::villager::{AnimationIndices, Direction, Movement};
+use crate::ext::*;
 use bevy::prelude::*;
 use seldom_state::prelude::*;
 

@@ -3,6 +3,7 @@
 pub mod actions;
 pub mod animation;
 pub mod audio;
+pub mod ext;
 pub mod loading;
 pub mod menu;
 pub mod player;
