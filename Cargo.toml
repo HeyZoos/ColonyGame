@@ -79,6 +79,7 @@ grid_2d = "0.15.3"
 tiled = { version = "0.11.2", features = ["wasm"] }
 pathfinding = "4.9.1"
 extend = "1.2.0"
+seldom_state = "0.10.0"
 
 [build-dependencies]
 embed-resource = "1"

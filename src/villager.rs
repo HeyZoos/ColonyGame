@@ -20,7 +20,7 @@ fn post_startup(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     world: Res<crate::worldgen::World>
 ) {
-    let goal = Coord { x: 5, y : 5 };
+    let goal = Coord { x: 10, y : 5 };
     let result = astar(
         /* start */ &Coord { x: 0, y: 0 },
         /* successors */ |&Coord { x, y }| {
@@ -78,7 +78,7 @@ fn post_startup(
         animation_indices,
         AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating)),
         // Assign the path to a villager
-        Speed(8.0),
+        Speed(16.0),
         Pathfinder::new(result.unwrap().0)
     ));
 }
@@ -112,9 +112,9 @@ fn animate_sprite(
 struct Speed(f32);
 
 #[derive(Component)]
-struct Pathfinder {
-    path: Vec<Coord>,
-    current_target: Option<Coord>,
+pub struct Pathfinder {
+    pub path: Vec<Coord>,
+    pub current_target: Option<Coord>,
 }
 
 impl Pathfinder {
