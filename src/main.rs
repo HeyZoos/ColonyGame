@@ -1,22 +1,14 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod animation;
-mod villager;
-mod worldgen;
-
 use bevy::asset::AssetMetaCheck;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
 use bevy_game::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
-use bevy_pancam::PanCamPlugin;
 use std::io::Cursor;
-use seldom_state::StateMachinePlugin;
 use winit::window::Icon;
-use villager::VillagerPlugin;
-use worldgen::WorldgenPlugin;
 
 fn main() {
     App::new()
@@ -35,13 +27,8 @@ fn main() {
                 }),
                 ..default()
             }),
-            PanCamPlugin::default(),
         ))
         .add_plugins(GamePlugin)
-        .add_plugins(StateMachinePlugin)
-        .add_plugins(WorldgenPlugin)
-        .add_plugins(VillagerPlugin)
-        .add_plugins(animation::AnimationPlugin)
         .add_systems(Startup, set_window_icon)
         .run();
 }

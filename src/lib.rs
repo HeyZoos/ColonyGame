@@ -1,21 +1,29 @@
 #![allow(clippy::type_complexity)]
 
-mod actions;
-mod audio;
-mod loading;
-mod menu;
-mod player;
+pub mod actions;
+pub mod animation;
+pub mod audio;
+pub mod loading;
+pub mod menu;
+pub mod player;
+pub mod villager;
+pub mod worldgen;
 
 use crate::actions::ActionsPlugin;
+use crate::animation::AnimationPlugin;
 use crate::audio::InternalAudioPlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
+use crate::villager::VillagerPlugin;
+use crate::worldgen::WorldgenPlugin;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
+use bevy_pancam::PanCamPlugin;
+use seldom_state::StateMachinePlugin;
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
@@ -36,11 +44,16 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<GameState>().add_plugins((
+            ActionsPlugin,
+            AnimationPlugin,
+            InternalAudioPlugin,
             LoadingPlugin,
             MenuPlugin,
-            ActionsPlugin,
-            InternalAudioPlugin,
+            PanCamPlugin,
             PlayerPlugin,
+            StateMachinePlugin,
+            VillagerPlugin,
+            WorldgenPlugin,
         ));
 
         #[cfg(debug_assertions)]
