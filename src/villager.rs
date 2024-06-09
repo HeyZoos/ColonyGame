@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use grid_2d::Coord;
 use pathfinding::prelude::astar;
 use std::time::Duration;
+use crate::animation::AnimationBundle;
 
 pub struct VillagerPlugin;
 
@@ -79,14 +80,15 @@ fn post_startup(
         AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating)),
         // Assign the path to a villager
         Speed(16.0),
-        Pathfinder::new(result.unwrap().0)
+        Pathfinder::new(result.unwrap().0),
+        AnimationBundle::default()
     ));
 }
 
 #[derive(Component)]
-struct AnimationIndices {
-    first: usize,
-    last: usize,
+pub struct AnimationIndices {
+    pub first: usize,
+    pub last: usize,
 }
 
 #[derive(Component)]

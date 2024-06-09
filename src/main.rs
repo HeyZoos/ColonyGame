@@ -13,6 +13,7 @@ use bevy::DefaultPlugins;
 use bevy_game::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
 use bevy_pancam::PanCamPlugin;
 use std::io::Cursor;
+use seldom_state::StateMachinePlugin;
 use winit::window::Icon;
 use villager::VillagerPlugin;
 use worldgen::WorldgenPlugin;
@@ -37,8 +38,10 @@ fn main() {
             PanCamPlugin::default(),
         ))
         .add_plugins(GamePlugin)
+        .add_plugins(StateMachinePlugin)
         .add_plugins(WorldgenPlugin)
         .add_plugins(VillagerPlugin)
+        .add_plugins(animation::AnimationPlugin)
         .add_systems(Startup, set_window_icon)
         .run();
 }
