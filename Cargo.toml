@@ -81,6 +81,7 @@ tiled = { version = "0.11.2", features = ["wasm"] }
 pathfinding = "4.9.1"
 extend = "1.2.0"
 seldom_state = "0.10.0"
+noise = "0.9.0"
 
 [build-dependencies]
 embed-resource = "1"
