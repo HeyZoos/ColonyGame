@@ -145,7 +145,7 @@ impl Movement {
     fn new(path: Vec<Coord>) -> Self {
         Movement { path }
     }
-    
+
     pub fn target(&self) -> Option<Vec2> {
         self.path.first().map(|v| v.to_vec2().to_world_space())
     }
@@ -160,7 +160,7 @@ fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &m
 
     for (mut transform, speed, mut movement) in query.iter_mut() {
         if let Some(target) = movement.target() {
-            
+
             // Check if we have reached the current target
             if transform.translation.xy().distance(target) < 0.1 {
                 // Move to the next target in the path
@@ -211,7 +211,7 @@ pub impl Vec2 {
     /// ```
     /// use bevy::prelude::*;
     /// use bevy_game::villager::Vec2Ext;
-    /// 
+    ///
     /// let vec = Vec2::new(2.0, 3.0);
     /// let world_space_vec = vec.to_world_space();
     /// assert_eq!(world_space_vec, Vec2::new(32.0, 48.0));
@@ -231,7 +231,7 @@ pub impl Vec2 {
     /// let vec1 = Vec2::new(1.0, 1.0);
     /// let vec2 = Vec2::new(4.0, 5.0);
     /// let direction = vec1.towards(&vec2);
-    /// assert!((direction - Vec2::new(-0.6, -0.8)).length() < 1e-5);
+    /// assert!((direction - Vec2::new(0.6, 0.8)).length() < 1e-5);
     /// ```
     fn towards(&self, other: &Vec2) -> Vec2 {
         (*other - *self).normalize()
@@ -247,10 +247,10 @@ pub impl Vec2 {
     /// use bevy_game::villager::Vec2Ext;
     ///
     /// let vec = Vec2::new(0.1, 0.9);
-    /// assert_eq!(Direction::from_vec2(vec), Some(Direction::Up));
+    /// assert_eq!(vec.to_direction(), Some(Direction::Up));
     ///
     /// let invalid_vec = Vec2::new(1.1, 1.1);
-    /// assert_eq!(Direction::from_vec2(invalid_vec), None);
+    /// assert_eq!(invalid_vec.to_direction(), None);
     /// ```
     fn to_direction(&self) -> Option<Direction> {
         match self.round() {
@@ -260,5 +260,28 @@ pub impl Vec2 {
             v if v == Vec2::new(1.0, 0.0) => Some(Direction::Right),
             _ => None,
         }
+    }
+
+    /// Returns the `Direction` from `self` towards `other`, if the direction is valid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bevy::prelude::*;
+    /// use bevy_game::villager::Direction;
+    /// use bevy_game::villager::Vec2Ext;
+    ///
+    /// let vec1 = Vec2::new(1.0, 1.0);
+    /// let vec2 = Vec2::new(4.0, 1.0);
+    /// let direction = vec1.to_direction_towards(&vec2);
+    /// assert_eq!(direction, Some(Direction::Right));
+    ///
+    /// let vec1 = Vec2::new(0.0, 0.0);
+    /// let vec2 = Vec2::new(1.0, 0.0);
+    /// let direction = vec1.to_direction_towards(&vec2);
+    /// assert_eq!(direction, Some(Direction::Right));
+    /// ```
+    fn to_direction_towards(&self, other: &Vec2) -> Option<Direction> {
+        self.towards(other).normalize().to_direction()
     }
 }
