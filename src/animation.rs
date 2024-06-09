@@ -72,7 +72,7 @@ fn update_animation_indices_in_moving_state(
 ) {
     for (transform, movement, mut animation_index, mut atlas) in query.iter_mut() {
         if let Some(target) = movement.target() {
-            if let Some(direction) = transform.translation.xy().towards(&target).to_direction() {
+            if let Some(direction) = transform.translation.xy().to_direction_towards(&target) {
                 match direction {
                     Direction::Up => {
                         if animation_index.first != 40 {
