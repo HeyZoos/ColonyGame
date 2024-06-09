@@ -1,35 +1,35 @@
+use crate::animation::AnimationBundle;
 use bevy::prelude::*;
 use grid_2d::Coord;
 use pathfinding::prelude::astar;
 use std::time::Duration;
-use crate::animation::AnimationBundle;
 
 pub struct VillagerPlugin;
 
 impl Plugin for VillagerPlugin {
-	fn build(&self, app: &mut App) {
-		app
-            .add_systems(PostStartup, post_startup)
-			.add_systems(Update, animate_sprite)
+    fn build(&self, app: &mut App) {
+        app.add_systems(PostStartup, post_startup)
+            .add_systems(Update, animate_sprite)
             .add_systems(Update, movement_system);
-	}
+    }
 }
 
 fn post_startup(
-	mut cmds: Commands, 
+    mut cmds: Commands,
     assets: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    world: Res<crate::worldgen::World>
+    world: Res<crate::worldgen::World>,
 ) {
-    let goal = Coord { x: 10, y : 5 };
+    let goal = Coord { x: 10, y: 5 };
     let result = astar(
         /* start */ &Coord { x: 0, y: 0 },
-        /* successors */ |&Coord { x, y }| {
+        /* successors */
+        |&Coord { x, y }| {
             let mut next_coords = vec![
                 Coord { x: x + 1, y },
                 Coord { x: x - 1, y },
                 Coord { x, y: y + 1 },
-                Coord { x, y: y - 1 }
+                Coord { x, y: y - 1 },
             ];
 
             next_coords.retain(|&coord| {
@@ -42,24 +42,15 @@ fn post_startup(
 
             next_coords.into_iter().map(|c| (c, 1))
         },
-        /* heuristic */ |coord| {
-            coord.distance2(goal) / 3
-        },
-        /* success */ |coord| {
-            *coord == goal
-        });
-    
+        /* heuristic */ |coord| coord.distance2(goal) / 3,
+        /* success */ |coord| *coord == goal,
+    );
+
     // Load the character sprite sheet
     let texture: Handle<Image> = assets.load("character.png");
 
     // Create a TextureAtlas from the sprite sheet
-    let layout = TextureAtlasLayout::from_grid(
-        Vec2::new(48.0, 48.0),
-        8,
-        24,
-        None,
-        None
-    );
+    let layout = TextureAtlasLayout::from_grid(Vec2::new(48.0, 48.0), 8, 24, None, None);
 
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
@@ -71,7 +62,7 @@ fn post_startup(
             texture,
             atlas: TextureAtlas {
                 layout: texture_atlas_layout,
-                index: animation_indices.first
+                index: animation_indices.first,
             },
             transform: Transform::from_xyz(0.0, 0.0, 2.0),
             ..Default::default()
@@ -81,7 +72,7 @@ fn post_startup(
         // Assign the path to a villager
         Speed(16.0),
         Movement::new(result.unwrap().0),
-        AnimationBundle::default()
+        AnimationBundle::default(),
     ));
 }
 
@@ -122,7 +113,6 @@ pub enum Direction {
 }
 
 impl Direction {
-    
     /// Converts a `Direction` to a `Vec2`.
     ///
     /// # Examples
@@ -130,7 +120,7 @@ impl Direction {
     /// ```
     /// use bevy::prelude::*;
     /// use bevy_game::villager::Direction;
-    /// 
+    ///
     /// let dir = Direction::Up;
     /// assert_eq!(dir.to_vec2(), Vec2::new(0.0, 1.0));
     /// ```
@@ -150,7 +140,7 @@ impl Direction {
     /// ```
     /// use bevy::prelude::*;
     /// use bevy_game::villager::Direction;
-    /// 
+    ///
     /// let vec = Vec2::new(0.0, 1.0);
     /// assert_eq!(Direction::from_vec2(vec), Some(Direction::Up));
     ///
@@ -172,20 +162,21 @@ impl Direction {
 pub struct Movement {
     pub path: Vec<Coord>,
     pub current_target: Option<Coord>,
-    pub direction: Direction
+    pub direction: Direction,
 }
 
 impl Movement {
     fn new(path: Vec<Coord>) -> Self {
         let current_target = path.first().cloned();
-        Movement { path, current_target, direction: Direction::Down }
+        Movement {
+            path,
+            current_target,
+            direction: Direction::Down,
+        }
     }
 }
 
-fn movement_system(
-    time: Res<Time>,
-    mut query: Query<(&mut Transform, &Speed, &mut Movement)>,
-) {
+fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &mut Movement)>) {
     for (mut transform, speed, mut pathfinder) in query.iter_mut() {
         let delta = time.delta_seconds();
 
@@ -195,8 +186,9 @@ fn movement_system(
             let target_y = current_target.y as f32 * 16.0;
 
             // Check if we have reached the current target
-            if (transform.translation.x - target_x).abs() < 0.1 &&
-                (transform.translation.y - target_y).abs() < 0.1 {
+            if (transform.translation.x - target_x).abs() < 0.1
+                && (transform.translation.y - target_y).abs() < 0.1
+            {
                 // Move to the next target in the path
                 pathfinder.path.remove(0);
                 pathfinder.current_target = pathfinder.path.first().cloned();
@@ -208,8 +200,16 @@ fn movement_system(
 
             // Normalize the direction
             let length = (direction_x.powi(2) + direction_y.powi(2)).sqrt();
-            let direction_x = if length != 0.0 { direction_x / length } else { 0.0 };
-            let direction_y = if length != 0.0 { direction_y / length } else { 0.0 };
+            let direction_x = if length != 0.0 {
+                direction_x / length
+            } else {
+                0.0
+            };
+            let direction_y = if length != 0.0 {
+                direction_y / length
+            } else {
+                0.0
+            };
 
             // Move the villager towards the current target
             transform.translation.x += direction_x * speed.0 * delta;
