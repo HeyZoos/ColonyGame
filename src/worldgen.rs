@@ -1,10 +1,11 @@
 use std::path::PathBuf;
+
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
-use grid_2d::{Coord, Grid, Size};
+use grid_2d::{Grid, Size};
 use noise::{NoiseFn, Perlin};
-use rand::prelude::SliceRandom;
 use rand::{SeedableRng, thread_rng};
+use rand::prelude::SliceRandom;
 use rand_chacha::ChaCha8Rng;
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
@@ -202,7 +203,7 @@ fn resource_layer_startup_system(
         // Threshold for placing resource tiles
         if noise_value > 0.3 {
             let tile_pos = TilePos { x: x as u32, y: y as u32 };
-            let wave_tile = world.wave.grid().get(Coord { x: x as i32, y: y as i32 }).unwrap();
+            let wave_tile = world.wave.grid().get(coord).unwrap();
             let pattern_id = wave_tile.chosen_pattern_id().unwrap();
             let value = world.patterns.pattern_top_left_value(pattern_id);
 
