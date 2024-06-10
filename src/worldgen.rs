@@ -14,6 +14,12 @@ const WIDTH: u32 = 256;
 const HEIGHT: u32 = 256;
 const TILE_SIZE: f32 = 16.0;
 
+// master.png
+const GRASS_TILE_ID: u16 = 17;
+
+// mushrooms-flowers-stones.png
+const BUSH_TILE_ID: u32 = 27;
+
 pub struct WorldgenPlugin;
 
 impl Plugin for WorldgenPlugin {
@@ -140,15 +146,19 @@ fn populate_tilemap(
 // u16 -> u16
 fn variants(tilemap_idx: u16) -> u16 {
     let mut rng = thread_rng();
-    // If a value is grass, randomly choose one of the variants
+    let grass_variants = generate_grass_variants();
     match tilemap_idx {
-        17 => *[
-            17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-            17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-            17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, // Weight the plain grass tile more heavily
-            85, 96, 97, 98, 99, 100, 101].choose(&mut rng).unwrap() as u16,
-        _ => tilemap_idx
+        GRASS_TILE_ID => *grass_variants.choose(&mut rng).unwrap(),
+        _ => tilemap_idx,
     }
+}
+
+// () -> Vec<u16>
+fn generate_grass_variants() -> Vec<u16> {
+    let mut variants = Vec::new();
+    variants.extend(std::iter::repeat(GRASS_TILE_ID).take(70)); // Weight the plain grass tile more heavily
+    variants.extend(&[85, 96, 97, 98, 99, 100, 101]);
+    variants
 }
 
 // Vec<u16> -> OverlappingPatterns<u16>
@@ -215,10 +225,10 @@ fn resource_layer_startup_system(
 
             // Check if the current tile is grass
             // We can only spawn resources on grass
-            if *value == 17 {
+            if *value == GRASS_TILE_ID {
                 let resource_tile = commands.spawn(TileBundle {
                     position: tile_pos,
-                    texture_index: TileTextureIndex(27), // The bush
+                    texture_index: TileTextureIndex(BUSH_TILE_ID),
                     tilemap_id: TilemapId(resource_tilemap_entity),
                     ..Default::default()
                 });
