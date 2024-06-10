@@ -2,6 +2,7 @@
 <map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="16" tileheight="16" infinite="1" nextlayerid="2" nextobjectid="1">
  <tileset firstgid="1" source="grass.tsx"/>
  <tileset firstgid="78" source="water.tsx"/>
+ <tileset firstgid="82" source="../../Water Objects.tsx"/>
  <layer id="1" name="Tile Layer 1" width="30" height="20">
   <data encoding="csv">
    <chunk x="0" y="0" width="16" height="16">
@@ -15,8 +16,8 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 78,79,80,81,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+82,83,84,85,86,87,88,89,90,91,92,93,0,0,0,0,
+94,95,96,97,98,99,100,101,102,103,104,105,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
