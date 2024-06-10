@@ -232,10 +232,11 @@ fn resource_layer_startup_system(
     let mut resource_tile_storage = TileStorage::empty(resource_tilemap_size);
 
     // Define resource types and their corresponding noise thresholds
+    // Put the higher priority items higher
     let resource_types = [
-        (BUSH_TILE_ID, 0.3),
-        (FLOWER_TILE_ID, 0.5),
         (STONE_TILE_ID, 0.7),
+        (FLOWER_TILE_ID, 0.5),
+        (BUSH_TILE_ID, 0.3),
     ];
 
     // Populate the resource tilemap
