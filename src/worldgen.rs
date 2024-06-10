@@ -38,7 +38,7 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     let tiled_map = match tiled_loader.load_tmx_map("assets/patterns.tmx") {
         Ok(map) => map,
         Err(e) => {
-            eprintln!("Failed to load Tiled map: {}", e);
+            error!("Failed to load Tiled map: {}", e);
             return;
         }
     };
