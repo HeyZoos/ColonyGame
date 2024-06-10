@@ -35,7 +35,13 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     let mut tiled_loader = tiled::Loader::new();
 
     // Note that this tilemap needs to be a square
-    let tiled_map = tiled_loader.load_tmx_map("assets/patterns.tmx").unwrap();
+    let tiled_map = match tiled_loader.load_tmx_map("assets/patterns.tmx") {
+        Ok(map) => map,
+        Err(e) => {
+            eprintln!("Failed to load Tiled map: {}", e);
+            return;
+        }
+    };
 
     // For each tilemap layer
     for layer_idx in (0..tiled_map.layers().len()).rev() {
@@ -110,7 +116,7 @@ fn populate_tilemap(
         let id = cell.chosen_pattern_id().unwrap();
         let value = variants(*patterns.pattern_top_left_value(id));
         let tile_pos = TilePos { x: coordinate.x as u32, y: coordinate.y as u32 };
-        
+
         let mut tile = commands
             .spawn(TileBundle {
                 position: tile_pos,
@@ -118,7 +124,7 @@ fn populate_tilemap(
                 tilemap_id: TilemapId(tilemap_entity),
                 ..Default::default()
             });
-        
+
         if value == 128 {
             tile.insert(AnimatedTile {
                 start: 128,
@@ -126,7 +132,7 @@ fn populate_tilemap(
                 speed: 0.5
             });
         }
-        
+
         tile_storage.set(&tile_pos, tile.id());
     }
 }
@@ -180,7 +186,7 @@ fn resource_layer_startup_system(
     world: Res<World>,
     assets: Res<AssetServer>
 ) {
-    let perlin = Perlin::new(3); 
+    let perlin = Perlin::new(3);
 
     // Define noise scale for resource placement
     let noise_scale = 0.1;
