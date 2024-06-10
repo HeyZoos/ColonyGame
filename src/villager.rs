@@ -22,7 +22,7 @@ fn post_startup(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     world: Res<crate::worldgen::World>,
 ) {
-    let goal = Coord { x: 10, y: 5 };
+    let goal = Coord { x: 5, y: 9 };
     let result = astar(
         /* start */ &Coord { x: 0, y: 0 },
         /* successors */
@@ -36,7 +36,9 @@ fn post_startup(
 
             next_coords.retain(|&coord| {
                 if let Some(cell) = world.wave.grid().get(coord) {
-                    cell.chosen_pattern_id().unwrap() != 255
+                    let pattern_id = cell.chosen_pattern_id().unwrap();
+                    let value = world.patterns.pattern_top_left_value(pattern_id);
+                    *value != 255
                 } else {
                     false
                 }
@@ -66,14 +68,14 @@ fn post_startup(
                 layout: texture_atlas_layout,
                 index: animation_indices.first,
             },
-            transform: Transform::from_xyz(0.0, 0.0, 2.0),
+            transform: Transform::from_xyz(0.0, 16.0, 10.0),
             ..Default::default()
         },
         animation_indices,
         AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating)),
         // Assign the path to a villager
         Speed(16.0),
-        Movement::new(result.unwrap().0),
+        Movement::new(result.unwrap_or((vec![], 0)).0),
         AnimationBundle::default(),
     ));
 }
