@@ -564,6 +564,7 @@ dependencies = [
  "bevy_ecs_tilemap",
  "bevy_kira_audio",
  "bevy_pancam",
+ "big-brain",
  "embed-resource",
  "extend",
  "grid_2d",
@@ -1125,6 +1126,27 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
  "winit",
+]
+
+[[package]]
+name = "big-brain"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2cb233c8982bc7ae359f233d0ead7c43b34b85ab6a87e05bcc9c9069d500f0d"
+dependencies = [
+ "bevy",
+ "big-brain-derive",
+]
+
+[[package]]
+name = "big-brain-derive"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9091e4fa0af011dc2325482b787b7ad1206c16b1b9d951348c90e84fd153927a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
