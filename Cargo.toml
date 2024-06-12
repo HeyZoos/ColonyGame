@@ -83,6 +83,7 @@ extend = "1.2.0"
 seldom_state = "0.10.0"
 noise = "0.9.0"
 big-brain = "0.20.0"
+bevy-inspector-egui = "0.24.0"
 
 [build-dependencies]
 embed-resource = "1"

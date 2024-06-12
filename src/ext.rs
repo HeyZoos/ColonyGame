@@ -28,6 +28,39 @@ pub impl Coord {
 
 #[ext]
 pub impl Vec2 {
+    /// Converts a `Vec2` to `Coord`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bevy::prelude::*;
+    /// use bevy_game::ext::Vec2Ext;
+    /// use grid_2d::Coord;
+    ///
+    /// let vec = Vec2::new(2.7, 3.9);
+    /// let coord = vec.to_coord();
+    /// assert_eq!(coord, Coord { x: 2, y: 3 });
+    /// ```
+    fn to_coord(&self) -> Coord {
+        Coord { x: self.x as i32, y: self.y as i32 }
+    }
+    
+    /// Converts a `Vec2` from world space (16x16 units) to local space.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bevy::prelude::*;
+    /// use bevy_game::ext::Vec2Ext;
+    ///
+    /// let world_space_vec = Vec2::new(32.0, 48.0);
+    /// let local_space_vec = world_space_vec.to_grid_space();
+    /// assert_eq!(local_space_vec, Vec2::new(2.0, 3.0));
+    /// ```
+    fn to_grid_space(&self) -> Vec2 {
+        *self / 16.0
+    }
+
     /// Converts a `Vec2` to world space (16x16 units).
     ///
     /// # Examples

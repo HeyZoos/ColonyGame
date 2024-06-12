@@ -1,3 +1,4 @@
+use crate::ai::{Bush, MoveToNearest, WorkNeedScorer};
 use crate::animation::AnimationBundle;
 use crate::ext::*;
 use bevy::prelude::*;
@@ -5,6 +6,9 @@ use bevy::utils::petgraph::matrix_graph::Zero;
 use grid_2d::Coord;
 use pathfinding::prelude::astar;
 use std::time::Duration;
+use big_brain::actions::Steps;
+use big_brain::pickers::FirstToScore;
+use big_brain::prelude::Thinker;
 
 pub struct VillagerPlugin;
 
@@ -16,16 +20,13 @@ impl Plugin for VillagerPlugin {
     }
 }
 
-fn post_startup(
-    mut cmds: Commands,
-    assets: Res<AssetServer>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    world: Res<crate::worldgen::World>,
-) {
-    let goal = Coord { x: 5, y: 9 };
-    let result = astar(
-        /* start */ &Coord { x: 0, y: 0 },
-        /* successors */
+pub fn find_path(
+    world: &crate::worldgen::World,
+    start: Coord,
+    goal: Coord,
+) -> Option<(Vec<Coord>, u32)> {
+    astar(
+        &start,
         |&Coord { x, y }| {
             let mut next_coords = vec![
                 Coord { x: x + 1, y },
@@ -46,10 +47,16 @@ fn post_startup(
 
             next_coords.into_iter().map(|c| (c, 1))
         },
-        /* heuristic */ |coord| coord.distance2(goal) / 3,
-        /* success */ |coord| *coord == goal,
-    );
+        |coord| coord.distance2(goal) / 3,
+        |coord| *coord == goal,
+    )
+}
 
+fn post_startup(
+    mut cmds: Commands,
+    assets: Res<AssetServer>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
     // Load the character sprite sheet
     let texture: Handle<Image> = assets.load("character.png");
 
@@ -60,23 +67,31 @@ fn post_startup(
 
     let animation_indices = AnimationIndices { first: 0, last: 7 };
 
+    let move_and_sleep = Steps::build()
+        .label("MoveAndSleep")
+        .step(MoveToNearest::<Bush>::new());
+
     // Spawn an animated character using the sprite sheet
     cmds.spawn((
+        Name::new("Villager"),
         SpriteSheetBundle {
             texture,
             atlas: TextureAtlas {
                 layout: texture_atlas_layout,
                 index: animation_indices.first,
             },
-            transform: Transform::from_xyz(0.0, 16.0, 10.0),
+            transform: Transform::from_xyz(5.0 * 16.0, 6.0 * 16.0, 10.0),
             ..Default::default()
         },
         animation_indices,
         AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating)),
-        // Assign the path to a villager
         Speed(16.0),
-        Movement::new(result.unwrap_or((vec![], 0)).0),
+        Movement::default(),
         AnimationBundle::default(),
+        Thinker::build()
+            .label("FarmerThinker")
+            .picker(FirstToScore::new(1.0))
+            .when(WorkNeedScorer, move_and_sleep)
     ));
 }
 
@@ -153,6 +168,12 @@ impl Movement {
     }
 }
 
+impl Default for Movement {
+    fn default() -> Self {
+        Self::new(vec![])
+    }
+}
+
 fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &mut Movement)>) {
     let delta = time.delta_seconds();
 
@@ -162,7 +183,6 @@ fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &m
 
     for (mut transform, speed, mut movement) in query.iter_mut() {
         if let Some(target) = movement.target() {
-
             // Check if we have reached the current target
             if transform.translation.xy().distance(target) < 0.1 {
                 // Move to the next target in the path
