@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::ai::Bush;
+use crate::agent::Bush;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};

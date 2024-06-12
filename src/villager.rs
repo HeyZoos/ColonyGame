@@ -1,4 +1,4 @@
-use crate::ai::{Bush, MoveToNearest, WorkNeedScorer};
+use crate::agent::{Bush, GatherAction, MoveToNearest, WorkNeedScorer};
 use crate::animation::AnimationBundle;
 use crate::ext::*;
 use bevy::prelude::*;
@@ -9,6 +9,7 @@ use std::time::Duration;
 use big_brain::actions::Steps;
 use big_brain::pickers::FirstToScore;
 use big_brain::prelude::Thinker;
+use crate::blackboard::Blackboard;
 
 pub struct VillagerPlugin;
 
@@ -67,9 +68,10 @@ fn post_startup(
 
     let animation_indices = AnimationIndices { first: 0, last: 7 };
 
-    let move_and_sleep = Steps::build()
-        .label("MoveAndSleep")
-        .step(MoveToNearest::<Bush>::new());
+    let move_and_gather = Steps::build()
+        .label("MoveAndGather")
+        .step(MoveToNearest::<Bush>::new())
+        .step(GatherAction {});
 
     // Spawn an animated character using the sprite sheet
     cmds.spawn((
@@ -91,7 +93,8 @@ fn post_startup(
         Thinker::build()
             .label("FarmerThinker")
             .picker(FirstToScore::new(1.0))
-            .when(WorkNeedScorer, move_and_sleep)
+            .when(WorkNeedScorer, move_and_gather),
+        Blackboard::default()
     ));
 }
 

@@ -11,8 +11,8 @@
 /// use bevy_game::blackboard::Blackboard;
 ///
 /// let mut blackboard = Blackboard::new();
-/// blackboard.set("health", serde_json::json!(100));
-/// blackboard.set("name", serde_json::json!("Agent Smith"));
+/// blackboard.insert("health", serde_json::json!(100));
+/// blackboard.insert("name", serde_json::json!("Agent Smith"));
 ///
 /// let health = blackboard.get("health");
 /// println!("Agent health: {}", health);
@@ -50,7 +50,7 @@ impl Blackboard {
     ///
     /// ```
     /// let mut blackboard = bevy_game::blackboard::Blackboard::new();
-    /// blackboard.set("key", serde_json::json!("value"));
+    /// blackboard.insert("key", serde_json::json!("value"));
     /// assert_eq!(blackboard.get("key"), &serde_json::json!("value"));
     /// ```
     pub fn get<I: serde_json::value::Index>(&self, key: I) -> &serde_json::Value {
@@ -71,14 +71,34 @@ impl Blackboard {
     ///
     /// ```
     /// let mut blackboard = bevy_game::blackboard::Blackboard::new();
-    /// blackboard.set("key", serde_json::json!("value"));
+    /// blackboard.insert("key", serde_json::json!("value"));
     /// assert_eq!(blackboard.get("key"), &serde_json::json!("value"));
     /// ```
-    pub fn set(&mut self, key: &str, value: serde_json::Value) {
+    pub fn insert(&mut self, key: &str, value: serde_json::Value) {
         self.0
             .as_object_mut()
             .unwrap()
             .insert(key.to_string(), value);
+    }
+
+    /// Removes a key-value pair from the `Blackboard`.
+    ///
+    /// This method allows you to delete data from the `Blackboard` by specifying the key.
+    /// If the key does not exist, this method does nothing.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - A string slice that holds the name of the key.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut blackboard = bevy_game::blackboard::Blackboard::new();
+    /// blackboard.insert("key", serde_json::json!("value"));
+    /// blackboard.remove("key");
+    /// ```
+    pub fn remove(&mut self, key: &str) {
+        self.0.as_object_mut().unwrap().remove(key);
     }
 }
 

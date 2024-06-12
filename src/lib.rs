@@ -1,9 +1,10 @@
 #![allow(clippy::type_complexity)]
 
 pub mod actions;
-pub mod ai;
+pub mod agent;
 pub mod animation;
 pub mod audio;
+pub mod blackboard;
 pub mod ext;
 pub mod inspector;
 pub mod loading;
@@ -21,7 +22,7 @@ use crate::player::PlayerPlugin;
 use crate::villager::VillagerPlugin;
 use crate::worldgen::WorldgenPlugin;
 
-use crate::ai::AIPlugin;
+use crate::agent::AgentPlugin;
 use bevy::app::App;
 #[cfg(debug_assertions)]
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -53,7 +54,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<GameState>().add_plugins((
             ActionsPlugin,
-            AIPlugin,
+            AgentPlugin,
             AnimationPlugin,
             BigBrainPlugin::new(PreUpdate),
             InspectorPlugin,
