@@ -20,15 +20,16 @@ use crate::player::PlayerPlugin;
 use crate::villager::VillagerPlugin;
 use crate::worldgen::WorldgenPlugin;
 
+use crate::ai::AIPlugin;
 use bevy::app::App;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_pancam::PanCamPlugin;
 use big_brain::BigBrainPlugin;
 use seldom_state::StateMachinePlugin;
-use crate::ai::AIPlugin;
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
@@ -60,7 +61,7 @@ impl Plugin for GamePlugin {
             PlayerPlugin,
             StateMachinePlugin,
             VillagerPlugin,
-            WorldInspectorPlugin::new(),
+            WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)),
             WorldgenPlugin,
         ));
 
