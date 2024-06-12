@@ -11,9 +11,9 @@ const MAX_DISTANCE: f32 = 1.0;
 #[derive(Clone, Component, Debug)]
 pub struct Bush;
 
-pub struct AIPlugin;
+pub struct AgentPlugin;
 
-impl Plugin for AIPlugin {
+impl Plugin for AgentPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             PreUpdate,
@@ -96,6 +96,8 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     info!("Set path to {:?}", std::any::type_name::<T>());
                     actor_movement.path = path.0;
                 }
+
+                *action_state = ActionState::Executing;
             }
             ActionState::Executing => {
                 let (actor_transform, _actor_movement) = thinkers.get_mut(actor.0).unwrap();
@@ -126,5 +128,32 @@ pub struct WorkNeedScorer;
 pub fn work_need_scorer_system(mut query: Query<(&Actor, &mut Score), With<WorkNeedScorer>>) {
     for (Actor(_actor), mut score) in &mut query {
         score.set(1.0);
+    }
+}
+
+#[derive(Clone, Component, Debug)]
+pub struct GatherAction;
+
+pub fn gather_action_system(
+    world: Res<crate::worldgen::World>,
+    mut bushes: Query<&mut TilePos, With<Bush>>,
+    mut thinkers: Query<(&mut Transform, &mut Movement), (With<HasThinker>, Without<Bush>)>,
+    mut action_query: Query<(&Actor, &mut ActionState, &mut GatherAction, &ActionSpan)>,
+) {
+    for (actor, mut action_state, mut move_to, span) in &mut action_query {
+        let _guard = span.span().enter();
+
+        match *action_state {
+            ActionState::Requested => {
+                *action_state = ActionState::Executing;
+            }
+            ActionState::Executing => {
+                *action_state = ActionState::Success;
+            }
+            ActionState::Cancelled => {
+                *action_state = ActionState::Failure;
+            }
+            _ => {}
+        }
     }
 }
