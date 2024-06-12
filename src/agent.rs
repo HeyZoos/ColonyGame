@@ -7,6 +7,7 @@ use big_brain::prelude::*;
 use serde_json::json;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use rand::prelude::IteratorRandom;
 
 const MAX_DISTANCE: f32 = 1.0;
 
@@ -64,21 +65,28 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
             ActionState::Requested => {
                 let (mut blackboard, actor_transform, mut actor_movement) =
                     agents.get_mut(actor.0).unwrap();
-                let goal_transform = tiles
+
+                let mut goal_transforms: Vec<_> = tiles
                     .iter_mut()
                     .map(|(entity, t)| {
                         let x = t.x as f32 * 16.0;
                         let y = t.y as f32 * 16.0;
                         (entity, t, Vec2 { x, y })
                     })
-                    // TODO(jesse): Order by distance and choose randomly from the top 10 closest
-                    // This is a hack so they won't get stuck looking for inaccessible items
-                    // It will also have the added benefit of spreading the agents out
-                    .min_by(|(_, _, a), (_, _, b)| {
-                        let delta_a = *a - actor_transform.translation.xy();
-                        let delta_b = *b - actor_transform.translation.xy();
-                        delta_a.length().partial_cmp(&delta_b.length()).unwrap()
-                    });
+                    .collect();
+
+                // Order by distance
+                goal_transforms.sort_by(|(_, _, a), (_, _, b)| {
+                    let delta_a = *a - actor_transform.translation.xy();
+                    let delta_b = *b - actor_transform.translation.xy();
+                    delta_a.length().partial_cmp(&delta_b.length()).unwrap()
+                });
+
+                // Choose randomly from the top 10 closest
+                let goal_transform = goal_transforms
+                    .iter()
+                    .take(5)
+                    .choose(&mut rand::thread_rng());
 
                 if let Some((entity, _tilepos, goal)) = goal_transform {
                     info!(
@@ -89,7 +97,7 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     );
                     move_to.goal = Some(goal.xy());
                     *action_state = ActionState::Executing;
-                    blackboard.insert("bush", json!(entity));
+                    blackboard.insert("bush", json!(*entity));
                 }
 
                 let path_option = find_path(
@@ -164,11 +172,17 @@ pub fn gather_action_system(
                 let raw_entity_u64 = raw_entity_number.as_u64().unwrap();
                 let raw_entity_u32 = raw_entity_u64 as u32;
 
-                commands.entity(Entity::from_raw(raw_entity_u32)).despawn();
+                let entity_option = { commands.get_entity(Entity::from_raw(raw_entity_u32)) };
+
+                if let Some(entity) = entity_option {
+                    let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows
+                    commands.entity(entity_id).despawn();
+                    *action_state = ActionState::Success;
+                } else {
+                    *action_state = ActionState::Cancelled;
+                }
 
                 blackboard.remove("bush");
-
-                *action_state = ActionState::Success;
             }
             ActionState::Cancelled => {
                 *action_state = ActionState::Failure;

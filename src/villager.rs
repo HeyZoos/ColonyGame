@@ -1,15 +1,15 @@
 use crate::agent::{Bush, GatherAction, MoveToNearest, WorkNeedScorer};
 use crate::animation::AnimationBundle;
+use crate::blackboard::Blackboard;
 use crate::ext::*;
 use bevy::prelude::*;
 use bevy::utils::petgraph::matrix_graph::Zero;
-use grid_2d::Coord;
-use pathfinding::prelude::astar;
-use std::time::Duration;
 use big_brain::actions::Steps;
 use big_brain::pickers::FirstToScore;
 use big_brain::prelude::Thinker;
-use crate::blackboard::Blackboard;
+use grid_2d::Coord;
+use pathfinding::prelude::astar;
+use std::time::Duration;
 
 pub struct VillagerPlugin;
 
@@ -68,37 +68,43 @@ fn post_startup(
 
     let animation_indices = AnimationIndices { first: 0, last: 7 };
 
-    let move_and_gather = Steps::build()
-        .label("MoveAndGather")
-        .step(MoveToNearest::<Bush>::new())
-        .step(GatherAction {});
+    for i in 1..3 {
+        let move_and_gather = Steps::build()
+            .label("MoveAndGather")
+            .step(MoveToNearest::<Bush>::new())
+            .step(GatherAction {});
 
-    // Spawn an animated character using the sprite sheet
-    cmds.spawn((
-        Name::new("Villager"),
-        SpriteSheetBundle {
-            texture,
-            atlas: TextureAtlas {
-                layout: texture_atlas_layout,
-                index: animation_indices.first,
+        // Spawn an animated character using the sprite sheet
+        cmds.spawn((
+            Name::new("Villager"),
+            SpriteSheetBundle {
+                texture: texture.clone(),
+                atlas: TextureAtlas {
+                    layout: texture_atlas_layout.clone(),
+                    index: animation_indices.first,
+                },
+                transform: Transform::from_xyz(
+                    25.0 * 16.0,
+                    (5.0 * 16.0) + (i as f32 * 5.0 * 16.0),
+                    10.0,
+                ),
+                ..Default::default()
             },
-            transform: Transform::from_xyz(5.0 * 16.0, 10.0 * 16.0, 10.0),
-            ..Default::default()
-        },
-        animation_indices,
-        AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating)),
-        Speed(16.0),
-        Movement::default(),
-        AnimationBundle::default(),
-        Thinker::build()
-            .label("FarmerThinker")
-            .picker(FirstToScore::new(1.0))
-            .when(WorkNeedScorer, move_and_gather),
-        Blackboard::default()
-    ));
+            animation_indices,
+            AnimationTimer(Timer::new(Duration::from_millis(100), TimerMode::Repeating)),
+            Speed(16.0),
+            Movement::default(),
+            AnimationBundle::default(),
+            Thinker::build()
+                .label("FarmerThinker")
+                .picker(FirstToScore::new(1.0))
+                .when(WorkNeedScorer, move_and_gather),
+            Blackboard::default(),
+        ));
+    }
 }
 
-#[derive(Component)]
+#[derive(Clone, Copy, Component)]
 pub struct AnimationIndices {
     pub first: usize,
     pub last: usize,
