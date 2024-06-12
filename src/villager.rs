@@ -80,7 +80,7 @@ fn post_startup(
                 layout: texture_atlas_layout,
                 index: animation_indices.first,
             },
-            transform: Transform::from_xyz(5.0 * 16.0, 6.0 * 16.0, 10.0),
+            transform: Transform::from_xyz(5.0 * 16.0, 10.0 * 16.0, 10.0),
             ..Default::default()
         },
         animation_indices,
@@ -184,7 +184,7 @@ fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &m
     for (mut transform, speed, mut movement) in query.iter_mut() {
         if let Some(target) = movement.target() {
             // Check if we have reached the current target
-            if transform.translation.xy().distance(target) < 0.1 {
+            if transform.translation.xy().distance(target) < 1.0 {
                 // Move to the next target in the path
                 movement.path.remove(0);
             }

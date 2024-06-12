@@ -24,7 +24,7 @@ use crate::worldgen::WorldgenPlugin;
 use crate::ai::AIPlugin;
 use bevy::app::App;
 #[cfg(debug_assertions)]
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+// use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -70,7 +70,7 @@ impl Plugin for GamePlugin {
 
         #[cfg(debug_assertions)]
         {
-            app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
+            // app.add_plugins((FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin::default()));
         }
     }
 }

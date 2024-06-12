@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use crate::ai::Bush;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
@@ -10,8 +11,8 @@ use rand_chacha::ChaCha8Rng;
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
-const WIDTH: u32 = 8;
-const HEIGHT: u32 = 8;
+const WIDTH: u32 = 128;
+const HEIGHT: u32 = 128; 
 const TILE_SIZE: f32 = 16.0;
 
 // master.png
@@ -143,12 +144,15 @@ fn populate_tilemap(
             y: coordinate.y as u32,
         };
 
-        let mut tile = commands.spawn(TileBundle {
-            position: tile_pos,
-            texture_index: TileTextureIndex(value as u32),
-            tilemap_id: TilemapId(tilemap_entity),
-            ..Default::default()
-        });
+        let mut tile = commands.spawn((
+            Name::new("Z - Tile"),
+            TileBundle {
+                position: tile_pos,
+                texture_index: TileTextureIndex(value as u32),
+                tilemap_id: TilemapId(tilemap_entity),
+                ..Default::default()
+            },
+        ));
 
         if value == 128 {
             tile.insert(AnimatedTile {
@@ -257,13 +261,19 @@ fn resource_layer_startup_system(
         if *value == GRASS_TILE_ID {
             for (resource_id, threshold) in resource_types.iter() {
                 if noise_value > *threshold {
-                    let resource_tile = commands.spawn(TileBundle {
+                    let mut resource_tile = commands.spawn(TileBundle {
                         position: tile_pos,
                         texture_index: TileTextureIndex(*resource_id),
                         tilemap_id: TilemapId(resource_tilemap_entity),
                         ..Default::default()
                     });
                     resource_tile_storage.set(&tile_pos, resource_tile.id());
+
+                    if *resource_id == BUSH_TILE_ID {
+                        resource_tile.insert(Bush);
+                        resource_tile.insert(Name::new("Bush"));
+                    }
+
                     break; // Stop after placing the first valid resource
                 }
             }
