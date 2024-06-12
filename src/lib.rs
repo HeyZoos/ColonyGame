@@ -5,6 +5,7 @@ pub mod ai;
 pub mod animation;
 pub mod audio;
 pub mod ext;
+pub mod inspector;
 pub mod loading;
 pub mod menu;
 pub mod player;
@@ -30,6 +31,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_pancam::PanCamPlugin;
 use big_brain::BigBrainPlugin;
 use seldom_state::StateMachinePlugin;
+use crate::inspector::InspectorPlugin;
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
@@ -54,6 +56,7 @@ impl Plugin for GamePlugin {
             AIPlugin,
             AnimationPlugin,
             BigBrainPlugin::new(PreUpdate),
+            InspectorPlugin,
             InternalAudioPlugin,
             LoadingPlugin,
             MenuPlugin,
