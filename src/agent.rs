@@ -1,3 +1,5 @@
+/// NOTE: Avoid using action state cancelled
+
 use crate::animation::GatheringTag;
 use crate::blackboard::Blackboard;
 use crate::ext::Vec2Ext;
@@ -86,7 +88,7 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                 // Choose randomly from the top 10 closest
                 let goal_transform = goal_transforms
                     .iter()
-                    .take(5)
+                    .take(10)
                     .choose(&mut rand::thread_rng());
 
                 if let Some((entity, _tilepos, goal)) = goal_transform {
@@ -100,7 +102,7 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     *action_state = ActionState::Executing;
                     blackboard.insert("bush", json!(*entity));
                 }
-                
+
                 let start_coord = actor_transform.translation.xy().to_grid_space().to_coord();
 
                 let path_option = find_path(
@@ -114,10 +116,12 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     if path.0.first() == Some(&start_coord) {
                         path.0.remove(0);
                     }
-                   
+
                     info!("Set path to {:?}", std::any::type_name::<T>());
                     actor_movement.path = path.0;
                     *action_state = ActionState::Executing;
+                } else {
+                    *action_state = ActionState::Failure;
                 }
             }
             ActionState::Executing => {
@@ -161,7 +165,12 @@ pub fn gather_action_system(
     time: Res<Time>,
     mut commands: Commands,
     mut agents: Query<
-        (&mut Blackboard, &mut Transform, &mut Movement, &mut GatheringTimer),
+        (
+            &mut Blackboard,
+            &mut Transform,
+            &mut Movement,
+            &mut GatheringTimer,
+        ),
         (With<HasThinker>, Without<Bush>),
     >,
     mut action_query: Query<(&Actor, &mut ActionState, &GatherAction, &ActionSpan)>,
@@ -177,36 +186,36 @@ pub fn gather_action_system(
                 // Add a timer for how long to stay gathering
                 commands
                     .entity(actor.0)
-                    .insert(GatheringTimer(Timer::from_seconds(10.0, TimerMode::Once)));
+                    .insert(GatheringTimer(Timer::from_seconds(3.0, TimerMode::Once)));
 
                 *action_state = ActionState::Executing;
             }
             ActionState::Executing => {
                 // Update the timer
-                if let Ok((_blackboard, _, _, mut timer)) = agents.get_mut(actor.0) {
+                if let Ok((mut blackboard, _, _, mut timer)) = agents.get_mut(actor.0) {
                     timer.0.tick(time.delta());
 
                     if timer.0.finished() {
-                        if let Ok((mut blackboard, _, _, _)) = agents.get_mut(actor.0) {
-                            let value = blackboard.get("bush");
-                            if let Some(raw_entity_number) = value.as_number() {
-                                let raw_entity_u64 = raw_entity_number.as_u64().unwrap();
-                                let raw_entity_u32 = raw_entity_u64 as u32;
+                        let value = blackboard.get("bush");
+                        if let Some(raw_entity_number) = value.as_number() {
+                            let raw_entity_u64 = raw_entity_number.as_u64().unwrap();
+                            let raw_entity_u32 = raw_entity_u64 as u32;
 
-                                let entity_option = commands.get_entity(Entity::from_raw(raw_entity_u32));
+                            let entity_option =
+                                commands.get_entity(Entity::from_raw(raw_entity_u32));
 
-                                if let Some(entity) = entity_option {
-                                    let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows
-                                    commands.entity(entity_id).despawn();
-                                    *action_state = ActionState::Success;
-                                } else {
-                                    *action_state = ActionState::Cancelled;
-                                }
+                            if let Some(entity) = entity_option {
+                                let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows
+                                commands.entity(entity_id).despawn();
+                                *action_state = ActionState::Success;
+                            } else {
+                                *action_state = ActionState::Failure;
                             }
-                            blackboard.remove("bush");
-                            commands.entity(actor.0).remove::<GatheringTag>();
-                            commands.entity(actor.0).remove::<GatheringTimer>();
                         }
+
+                        blackboard.remove("bush");
+                        commands.entity(actor.0).remove::<GatheringTag>();
+                        commands.entity(actor.0).remove::<GatheringTimer>();
                     }
                 }
             }
@@ -214,4 +223,3 @@ pub fn gather_action_system(
         }
     }
 }
-
