@@ -81,13 +81,38 @@ fn trigger_when_not_gathering(
 }
 
 fn update_animation_indices_in_idle_state(
-    mut query: Query<(&mut AnimationIndices, &mut TextureAtlas), With<IdleState>>,
+    mut query: Query<(&Movement, &mut AnimationIndices, &mut TextureAtlas), With<IdleState>>,
 ) {
-    for (mut animation_index, mut atlas) in query.iter_mut() {
-        if animation_index.first != 0 {
-            animation_index.first = 0;
-            animation_index.last = 7;
-            atlas.index = animation_index.first;
+    for (movement, mut animation_index, mut atlas) in query.iter_mut() {
+        match movement.direction {
+            Direction::Up => {
+                if animation_index.first != 8 {
+                    animation_index.first = 8;
+                    animation_index.last = 15;
+                    atlas.index = animation_index.first;
+                }
+            }
+            Direction::Down => {
+                if animation_index.first != 0 {
+                    animation_index.first = 0;
+                    animation_index.last = 7;
+                    atlas.index = animation_index.first;
+                }
+            }
+            Direction::Left => {
+                if animation_index.first != 16 {
+                    animation_index.first = 16;
+                    animation_index.last = 23;
+                    atlas.index = animation_index.first;
+                }
+            }
+            Direction::Right => {
+                if animation_index.first != 24 {
+                    animation_index.first = 24;
+                    animation_index.last = 31;
+                    atlas.index = animation_index.first;
+                }
+            }
         }
     }
 }

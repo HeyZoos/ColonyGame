@@ -26,9 +26,7 @@ pub fn find_path(
     start: Coord,
     goal: Coord,
 ) -> Option<(Vec<Coord>, u32)> {
-    dbg!(&start);
-    dbg!(&goal);
-    dbg!(astar(
+    astar(
         &start,
         |&Coord { x, y }| {
             let mut next_coords = vec![
@@ -52,7 +50,7 @@ pub fn find_path(
         },
         |coord| coord.distance2(goal) / 3,
         |coord| *coord == goal,
-    ))
+    )
 }
 
 fn post_startup(
@@ -214,7 +212,7 @@ fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &m
 
                 // Update the direction
                 if let Some(direction) = transform.translation.xy().to_direction_towards(&target) {
-                    movement.direction = direction; 
+                    movement.direction = direction;
                 }
             }
         }
