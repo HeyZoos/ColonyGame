@@ -26,7 +26,9 @@ pub fn find_path(
     start: Coord,
     goal: Coord,
 ) -> Option<(Vec<Coord>, u32)> {
-    astar(
+    dbg!(&start);
+    dbg!(&goal);
+    dbg!(astar(
         &start,
         |&Coord { x, y }| {
             let mut next_coords = vec![
@@ -50,7 +52,7 @@ pub fn find_path(
         },
         |coord| coord.distance2(goal) / 3,
         |coord| *coord == goal,
-    )
+    ))
 }
 
 fn post_startup(
