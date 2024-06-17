@@ -121,7 +121,6 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                 trace!("Distance: {}", distance);
 
                 if distance > MAX_DISTANCE {
-                    trace!("Stepping closer.");
                     // Movement should be handled by the movement system
                 } else {
                     info!("We got there!");
@@ -177,47 +176,35 @@ pub fn gather_action_system(
             }
             ActionState::Executing => {
                 // Update the timer
-                let (_blackboard, _, _, mut timer) = agents.get_mut(actor.0).unwrap();
-                timer.0.tick(time.delta());
+                if let Ok((_blackboard, _, _, mut timer)) = agents.get_mut(actor.0) {
+                    timer.0.tick(time.delta());
 
-                if timer.0.finished() {
-                    let (mut blackboard, _, _, _timer) = agents.get_mut(actor.0).unwrap();
+                    if timer.0.finished() {
+                        if let Ok((mut blackboard, _, _, _)) = agents.get_mut(actor.0) {
+                            let value = blackboard.get("bush");
+                            if let Some(raw_entity_number) = value.as_number() {
+                                let raw_entity_u64 = raw_entity_number.as_u64().unwrap();
+                                let raw_entity_u32 = raw_entity_u64 as u32;
 
-                    let value = blackboard.get("bush");
-                    let raw_entity_number = value.as_number().unwrap();
-                    let raw_entity_u64 = raw_entity_number.as_u64().unwrap();
-                    let raw_entity_u32 = raw_entity_u64 as u32;
+                                let entity_option = commands.get_entity(Entity::from_raw(raw_entity_u32));
 
-                    let entity_option = { commands.get_entity(Entity::from_raw(raw_entity_u32)) };
-
-                    if let Some(entity) = entity_option {
-                        let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows
-                        commands.entity(entity_id).despawn();
-                        *action_state = ActionState::Success;
-                    } else {
-                        *action_state = ActionState::Cancelled;
+                                if let Some(entity) = entity_option {
+                                    let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows
+                                    commands.entity(entity_id).despawn();
+                                    *action_state = ActionState::Success;
+                                } else {
+                                    *action_state = ActionState::Cancelled;
+                                }
+                            }
+                            blackboard.remove("bush");
+                            commands.entity(actor.0).remove::<GatheringTag>();
+                            commands.entity(actor.0).remove::<GatheringTimer>();
+                        }
                     }
-
-                    blackboard.remove("bush");
                 }
             }
-            ActionState::Cancelled => {
-                info!("Cancelled => Remove gathering tag and timer");
-                *action_state = ActionState::Failure;
-                commands.entity(actor.0).remove::<GatheringTag>();
-                commands.entity(actor.0).remove::<GatheringTimer>();
-            }
-            ActionState::Success => {
-                info!("Success => Remove gathering tag and timer");
-                commands.entity(actor.0).remove::<GatheringTag>();
-                commands.entity(actor.0).remove::<GatheringTimer>();
-            }
-            ActionState::Init => {
-                info!("INIT");
-            }
-            ActionState::Failure => {
-                info!("FAILURE");
-            }
+            _ => {}
         }
     }
 }
+

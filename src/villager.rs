@@ -72,7 +72,6 @@ fn post_startup(
         let move_and_gather = Steps::build()
             .label("MoveAndGather")
             .step(MoveToNearest::<Bush>::new())
-            // .step(PlayGatherAnimationAction {})
             .step(GatherAction {});
 
         // Spawn an animated character using the sprite sheet
@@ -166,11 +165,15 @@ impl Direction {
 #[derive(Component)]
 pub struct Movement {
     pub path: Vec<Coord>,
+    pub direction: Direction,
 }
 
 impl Movement {
     fn new(path: Vec<Coord>) -> Self {
-        Movement { path }
+        Movement {
+            path,
+            direction: Direction::Down,
+        }
     }
 
     pub fn target(&self) -> Option<Vec2> {
@@ -206,6 +209,11 @@ fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &m
                 // Move the villager towards the current target
                 transform.translation.x += heading.x * speed.0 * delta;
                 transform.translation.y += heading.y * speed.0 * delta;
+
+                // Update the direction
+                if let Some(direction) = transform.translation.xy().to_direction_towards(&target) {
+                    movement.direction = direction; 
+                }
             }
         }
     }

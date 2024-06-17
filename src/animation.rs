@@ -53,10 +53,10 @@ impl Default for AnimationBundle {
 
         let state = StateMachine::default()
             .trans::<IdleState, _>(trigger_when_moving, MovingState)
-            .trans::<MovingState, _>(trigger_when_idle, IdleState)
             .trans::<IdleState, _>(trigger_when_gathering, GatheringState)
             .trans::<MovingState, _>(trigger_when_gathering, GatheringState)
             .trans::<GatheringState, _>(trigger_when_not_gathering, IdleState)
+            .trans::<MovingState, _>(trigger_when_idle, IdleState)
             .set_trans_logging(true);
 
         Self {
@@ -142,48 +142,36 @@ fn update_animation_indices_in_moving_state(
 }
 
 fn update_animation_indices_in_gathering_state(
-    mut query: Query<
-        (
-            &Transform,
-            &Movement,
-            &mut AnimationIndices,
-            &mut TextureAtlas,
-        ),
-        With<GatheringState>,
-    >,
+    mut query: Query<(&Movement, &mut AnimationIndices, &mut TextureAtlas), With<GatheringState>>,
 ) {
-    for (transform, movement, mut animation_index, mut atlas) in query.iter_mut() {
-        if let Some(target) = movement.target() {
-            if let Some(direction) = transform.translation.xy().to_direction_towards(&target) {
-                match direction {
-                    Direction::Up => {
-                        if animation_index.first != 104 {
-                            animation_index.first = 104;
-                            animation_index.last = 111;
-                            atlas.index = animation_index.first;
-                        }
-                    }
-                    Direction::Down => {
-                        if animation_index.first != 96 {
-                            animation_index.first = 96;
-                            animation_index.last = 103;
-                            atlas.index = animation_index.first;
-                        }
-                    }
-                    Direction::Left => {
-                        if animation_index.first != 112 {
-                            animation_index.first = 112;
-                            animation_index.last = 119;
-                            atlas.index = animation_index.first;
-                        }
-                    }
-                    Direction::Right => {
-                        if animation_index.first != 120 {
-                            animation_index.first = 120;
-                            animation_index.last = 127;
-                            atlas.index = animation_index.first;
-                        }
-                    }
+    for (movement, mut animation_index, mut atlas) in query.iter_mut() {
+        match movement.direction {
+            Direction::Up => {
+                if animation_index.first != 104 {
+                    animation_index.first = 104;
+                    animation_index.last = 111;
+                    atlas.index = animation_index.first;
+                }
+            }
+            Direction::Down => {
+                if animation_index.first != 96 {
+                    animation_index.first = 96;
+                    animation_index.last = 103;
+                    atlas.index = animation_index.first;
+                }
+            }
+            Direction::Left => {
+                if animation_index.first != 112 {
+                    animation_index.first = 112;
+                    animation_index.last = 119;
+                    atlas.index = animation_index.first;
+                }
+            }
+            Direction::Right => {
+                if animation_index.first != 120 {
+                    animation_index.first = 120;
+                    animation_index.last = 127;
+                    atlas.index = animation_index.first;
                 }
             }
         }
