@@ -28,6 +28,8 @@ impl Plugin for AgentPlugin {
                 (work_need_scorer_system,).in_set(BigBrainSet::Scorers),
             ),
         );
+        
+        app.add_systems(Update, update_z_system);
     }
 }
 
@@ -221,5 +223,12 @@ pub fn gather_action_system(
             }
             _ => {}
         }
+    }
+}
+
+fn update_z_system(mut query: Query<&mut Transform, With<HasThinker>>) {
+    for mut transform in query.iter_mut() {
+        // Inverse the y value relationship to z and add to the base value of 10.0
+        transform.translation.z = 10.0 + (10000.0 - transform.translation.y) / 100.0;
     }
 }
