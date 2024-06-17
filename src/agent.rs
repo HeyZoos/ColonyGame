@@ -1,13 +1,14 @@
+use crate::animation::GatheringTag;
 use crate::blackboard::Blackboard;
 use crate::ext::Vec2Ext;
 use crate::villager::{find_path, Movement};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use big_brain::prelude::*;
+use rand::prelude::IteratorRandom;
 use serde_json::json;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use rand::prelude::IteratorRandom;
 
 const MAX_DISTANCE: f32 = 1.0;
 
@@ -147,10 +148,14 @@ pub fn work_need_scorer_system(mut query: Query<(&Actor, &mut Score), With<WorkN
 #[derive(Clone, Component, Debug, ActionBuilder)]
 pub struct GatherAction;
 
+#[derive(Component)]
+pub struct GatheringTimer(Timer);
+
 pub fn gather_action_system(
+    time: Res<Time>,
     mut commands: Commands,
     mut agents: Query<
-        (&mut Blackboard, &mut Transform, &mut Movement),
+        (&mut Blackboard, &mut Transform, &mut Movement, &mut GatheringTimer),
         (With<HasThinker>, Without<Bush>),
     >,
     mut action_query: Query<(&Actor, &mut ActionState, &GatherAction, &ActionSpan)>,
@@ -160,34 +165,59 @@ pub fn gather_action_system(
 
         match *action_state {
             ActionState::Requested => {
+                // This tag will cause the animation state machine to put it in the gathering state
+                commands.entity(actor.0).insert(GatheringTag {});
+
+                // Add a timer for how long to stay gathering
+                commands
+                    .entity(actor.0)
+                    .insert(GatheringTimer(Timer::from_seconds(10.0, TimerMode::Once)));
+
                 *action_state = ActionState::Executing;
             }
             ActionState::Executing => {
-                info!("Gathering!");
+                // Update the timer
+                let (_blackboard, _, _, mut timer) = agents.get_mut(actor.0).unwrap();
+                timer.0.tick(time.delta());
 
-                let (mut blackboard, _, _) = agents.get_mut(actor.0).unwrap();
+                if timer.0.finished() {
+                    let (mut blackboard, _, _, _timer) = agents.get_mut(actor.0).unwrap();
 
-                let value = blackboard.get("bush");
-                let raw_entity_number = value.as_number().unwrap();
-                let raw_entity_u64 = raw_entity_number.as_u64().unwrap();
-                let raw_entity_u32 = raw_entity_u64 as u32;
+                    let value = blackboard.get("bush");
+                    let raw_entity_number = value.as_number().unwrap();
+                    let raw_entity_u64 = raw_entity_number.as_u64().unwrap();
+                    let raw_entity_u32 = raw_entity_u64 as u32;
 
-                let entity_option = { commands.get_entity(Entity::from_raw(raw_entity_u32)) };
+                    let entity_option = { commands.get_entity(Entity::from_raw(raw_entity_u32)) };
 
-                if let Some(entity) = entity_option {
-                    let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows
-                    commands.entity(entity_id).despawn();
-                    *action_state = ActionState::Success;
-                } else {
-                    *action_state = ActionState::Cancelled;
+                    if let Some(entity) = entity_option {
+                        let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows
+                        commands.entity(entity_id).despawn();
+                        *action_state = ActionState::Success;
+                    } else {
+                        *action_state = ActionState::Cancelled;
+                    }
+
+                    blackboard.remove("bush");
                 }
-
-                blackboard.remove("bush");
             }
             ActionState::Cancelled => {
+                info!("Cancelled => Remove gathering tag and timer");
                 *action_state = ActionState::Failure;
+                commands.entity(actor.0).remove::<GatheringTag>();
+                commands.entity(actor.0).remove::<GatheringTimer>();
             }
-            _ => {}
+            ActionState::Success => {
+                info!("Success => Remove gathering tag and timer");
+                commands.entity(actor.0).remove::<GatheringTag>();
+                commands.entity(actor.0).remove::<GatheringTimer>();
+            }
+            ActionState::Init => {
+                info!("INIT");
+            }
+            ActionState::Failure => {
+                info!("FAILURE");
+            }
         }
     }
 }

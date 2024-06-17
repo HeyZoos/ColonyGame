@@ -68,10 +68,11 @@ fn post_startup(
 
     let animation_indices = AnimationIndices { first: 0, last: 7 };
 
-    for i in 1..3 {
+    for i in 1..2 {
         let move_and_gather = Steps::build()
             .label("MoveAndGather")
             .step(MoveToNearest::<Bush>::new())
+            // .step(PlayGatherAnimationAction {})
             .step(GatherAction {});
 
         // Spawn an animated character using the sprite sheet
