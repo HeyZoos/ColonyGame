@@ -100,14 +100,21 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     *action_state = ActionState::Executing;
                     blackboard.insert("bush", json!(*entity));
                 }
+                
+                let start_coord = actor_transform.translation.xy().to_grid_space().to_coord();
 
                 let path_option = find_path(
                     &world,
-                    actor_transform.translation.xy().to_grid_space().to_coord(),
+                    start_coord,
                     move_to.goal.unwrap().to_grid_space().to_coord(),
                 );
 
-                if let Some(path) = path_option {
+                if let Some(mut path) = path_option {
+                    // We don't want to include the first goal if it is the same as the start
+                    if path.0.first() == Some(&start_coord) {
+                        path.0.remove(0);
+                    }
+                   
                     info!("Set path to {:?}", std::any::type_name::<T>());
                     actor_movement.path = path.0;
                     *action_state = ActionState::Executing;
