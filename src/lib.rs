@@ -10,6 +10,7 @@ pub mod inspector;
 pub mod loading;
 pub mod menu;
 pub mod player;
+pub mod reservations;
 pub mod villager;
 pub mod worldgen;
 
@@ -33,6 +34,7 @@ use bevy_pancam::PanCamPlugin;
 use big_brain::BigBrainPlugin;
 use seldom_state::StateMachinePlugin;
 use crate::inspector::InspectorPlugin;
+use crate::reservations::ReservationsPlugin;
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
@@ -63,6 +65,7 @@ impl Plugin for GamePlugin {
             MenuPlugin,
             PanCamPlugin,
             PlayerPlugin,
+            ReservationsPlugin,
             StateMachinePlugin,
             VillagerPlugin,
             WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)),
