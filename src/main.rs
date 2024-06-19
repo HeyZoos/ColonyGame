@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use bevy::asset::AssetMetaCheck;
+use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
@@ -27,7 +28,11 @@ fn main() {
                 }),
                 ..default()
             })
-            .set(ImagePlugin::default_nearest()),))
+            .set(ImagePlugin::default_nearest())
+            .set(LogPlugin {
+                filter: "bevy_game=trace".into(),
+                ..default()
+            }),))
         .add_plugins(GamePlugin)
         .add_systems(Startup, set_window_icon)
         .run();

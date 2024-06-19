@@ -68,7 +68,7 @@ fn post_startup(
 
     let animation_indices = AnimationIndices { first: 0, last: 7 };
 
-    for i in 1..6 {
+    for i in 1..2 {
         let move_and_gather = Steps::build()
             .label("MoveAndGather")
             .step(MoveToNearest::<Bush>::new())
@@ -85,7 +85,7 @@ fn post_startup(
                 },
                 transform: Transform::from_xyz(
                     25.0 * 16.0,
-                    (6.0 * 16.0) + (i as f32 * 1.0 * 16.0),
+                    (10.0 * 16.0) + (i as f32 * 1.0 * 16.0),
                     10.0,
                 ),
                 ..Default::default()

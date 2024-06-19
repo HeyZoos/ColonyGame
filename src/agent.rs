@@ -1,13 +1,15 @@
 /// NOTE: Avoid using action state cancelled
-
 use crate::animation::GatheringTag;
 use crate::blackboard::Blackboard;
 use crate::ext::Vec2Ext;
+use crate::reservations::{
+    Reservable, Reservation, ReservationRequest, ReservationRequestBuilder, Reserved,
+};
 use crate::villager::{find_path, Movement};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use big_brain::prelude::*;
-use rand::prelude::IteratorRandom;
+use grid_2d::Coord;
 use serde_json::json;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -28,7 +30,7 @@ impl Plugin for AgentPlugin {
                 (work_need_scorer_system,).in_set(BigBrainSet::Scorers),
             ),
         );
-        
+
         app.add_systems(Update, update_z_system);
     }
 }
@@ -56,87 +58,139 @@ impl<T: Clone + Component + Debug> Default for MoveToNearest<T> {
 
 pub fn move_to_nearest_system<T: Clone + Component + Debug>(
     world: Res<crate::worldgen::World>,
-    mut tiles: Query<(Entity, &mut TilePos), With<T>>,
-    mut agents: Query<
+    mut unreserved_tiles: Query<
+        (Entity, &mut TilePos),
+        (With<T>, With<Reservable>, Without<Reserved>),
+    >,
+    reserved_tiles: Query<(Entity, &mut TilePos), (With<T>, With<Reservable>, With<Reserved>)>,
+    mut agents_without_reservation: Query<
         (&mut Blackboard, &mut Transform, &mut Movement),
-        (With<HasThinker>, Without<T>),
+        (With<HasThinker>, Without<Reservation>),
+    >,
+    mut agents_with_reservation: Query<
+        (&mut Blackboard, &mut Transform, &mut Movement, &Reservation),
+        (With<HasThinker>,),
     >,
     mut action_query: Query<(&Actor, &mut ActionState, &mut MoveToNearest<T>, &ActionSpan)>,
+    mut reservation_request_writer: EventWriter<ReservationRequest>,
 ) {
     for (actor, mut action_state, mut move_to, span) in &mut action_query {
         let _guard = span.span().enter();
 
         match *action_state {
             ActionState::Requested => {
-                let (mut blackboard, actor_transform, mut actor_movement) =
-                    agents.get_mut(actor.0).unwrap();
+                if let Ok(agent) = agents_without_reservation.get_mut(actor.0) {
+                    // Get all possible unreserved target tiles
+                    let mut possible_targets: Vec<_> = unreserved_tiles
+                        .iter_mut()
+                        .map(|(entity, t)| {
+                            let x = t.x as f32 * 16.0;
+                            let y = t.y as f32 * 16.0;
+                            (entity, t, Vec2 { x, y })
+                        })
+                        .collect();
 
-                let mut goal_transforms: Vec<_> = tiles
-                    .iter_mut()
-                    .map(|(entity, t)| {
-                        let x = t.x as f32 * 16.0;
-                        let y = t.y as f32 * 16.0;
-                        (entity, t, Vec2 { x, y })
-                    })
-                    .collect();
-
-                // Order by distance
-                goal_transforms.sort_by(|(_, _, a), (_, _, b)| {
-                    let delta_a = *a - actor_transform.translation.xy();
-                    let delta_b = *b - actor_transform.translation.xy();
-                    delta_a.length().partial_cmp(&delta_b.length()).unwrap()
-                });
-
-                // Choose randomly from the top 10 closest
-                let goal_transform = goal_transforms
-                    .iter()
-                    .take(10)
-                    .choose(&mut rand::thread_rng());
-
-                if let Some((entity, _tilepos, goal)) = goal_transform {
-                    info!(
-                        "Found {:?} at ({}, {})",
-                        std::any::type_name::<T>(),
-                        goal.x,
-                        goal.y
+                    trace!(
+                        "Searching for possible tiles for agent {:?}, unreserved tile count = {}",
+                        actor.0,
+                        possible_targets.len()
                     );
-                    move_to.goal = Some(goal.xy());
-                    *action_state = ActionState::Executing;
-                    blackboard.insert("bush", json!(*entity));
+
+                    let agent_transform = agent.1;
+                    let start_coord = agent_transform.translation.xy().to_grid_space().to_coord();
+
+                    // Order by distance
+                    possible_targets.sort_by(|(_, _, a), (_, _, b)| {
+                        let delta_a = *a - agent_transform.translation.xy();
+                        let delta_b = *b - agent_transform.translation.xy();
+                        delta_a.length().partial_cmp(&delta_b.length()).unwrap()
+                    });
+
+                    // Attempt to search the nearest 10 possible targets
+                    for (possible_target_entity, tile_position, tile_world_position) in
+                        possible_targets.iter().take(10)
+                    {
+                        let path_option = find_path(
+                            &world,
+                            start_coord,
+                            Coord {
+                                x: tile_position.x as i32,
+                                y: tile_position.y as i32,
+                            },
+                        );
+
+                        if path_option.is_some() {
+                            trace!(
+                                "Found reachable {:?} (Tile Coordinate {}, {}) (World Position {}, {}) - attempting a to create a reservation on {:?} for {:?}",
+                                std::any::type_name::<T>(),
+                                tile_position.x,
+                                tile_position.y,
+                                tile_world_position.x,
+                                tile_world_position.y,
+                                possible_target_entity,
+                                actor.0
+                            );
+
+                            reservation_request_writer.send(
+                                ReservationRequestBuilder::default()
+                                    .requester(actor.0)
+                                    .target(*possible_target_entity)
+                                    .build()
+                                    .unwrap(),
+                            );
+
+                            // This shouldn't be here but whatever
+                            move_to.goal = Some(*tile_world_position);
+
+                            *action_state = ActionState::Requested;
+                            return;
+                        }
+                    }
                 }
 
-                let start_coord = actor_transform.translation.xy().to_grid_space().to_coord();
+                if let Ok(agent) = agents_with_reservation.get_mut(actor.0) {
+                    let mut blackboard = agent.0;
+                    let agent_transform = agent.1;
+                    let mut agent_movement = agent.2;
+                    let reservation = agent.3;
 
-                let path_option = find_path(
-                    &world,
-                    start_coord,
-                    move_to.goal.unwrap().to_grid_space().to_coord(),
-                );
+                    let start_coord = agent_transform.translation.xy().to_grid_space().to_coord();
+                    let goal_tile = reserved_tiles.get(reservation.target);
 
-                if let Some(mut path) = path_option {
-                    // We don't want to include the first goal if it is the same as the start
-                    if path.0.first() == Some(&start_coord) {
-                        path.0.remove(0);
+                    if let Ok((goal_tile_entity, goal_tile_position)) = goal_tile {
+                        let path_option = find_path(
+                            &world,
+                            start_coord,
+                            Coord {
+                                x: goal_tile_position.x as i32,
+                                y: goal_tile_position.y as i32,
+                            },
+                        );
+
+                        if let Some((mut path, _)) = path_option {
+                            // We don't want to include the first goal if it is the same as the start
+                            if path.first() == Some(&start_coord) {
+                                path.remove(0);
+                            }
+
+                            trace!("Set path to {:?}", std::any::type_name::<T>());
+                            agent_movement.path = path;
+                            *action_state = ActionState::Executing;
+                            blackboard.insert("bush", json!(goal_tile_entity));
+                        }
+                    } else {
+                        *action_state = ActionState::Failure;
                     }
-
-                    info!("Set path to {:?}", std::any::type_name::<T>());
-                    actor_movement.path = path.0;
-                    *action_state = ActionState::Executing;
-                } else {
-                    *action_state = ActionState::Failure;
                 }
             }
             ActionState::Executing => {
-                let (_, actor_transform, _actor_movement) = agents.get_mut(actor.0).unwrap();
+                let (_, actor_transform, _actor_movement, _reservation) =
+                    agents_with_reservation.get_mut(actor.0).unwrap();
                 let delta = move_to.goal.unwrap() - actor_transform.translation.xy();
                 let distance = delta.length();
-
-                trace!("Distance: {}", distance);
-
                 if distance > MAX_DISTANCE {
                     // Movement should be handled by the movement system
                 } else {
-                    info!("We got there!");
                     *action_state = ActionState::Success;
                 }
             }
@@ -218,6 +272,7 @@ pub fn gather_action_system(
                         blackboard.remove("bush");
                         commands.entity(actor.0).remove::<GatheringTag>();
                         commands.entity(actor.0).remove::<GatheringTimer>();
+                        commands.entity(actor.0).remove::<Reservation>();
                     }
                 }
             }

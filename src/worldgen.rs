@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use crate::agent::Bush;
+use crate::reservations::Reservable;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
@@ -12,7 +13,7 @@ use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
 const WIDTH: u32 = 128;
-const HEIGHT: u32 = 128; 
+const HEIGHT: u32 = 128;
 const TILE_SIZE: f32 = 16.0;
 
 // master.png
@@ -270,8 +271,9 @@ fn resource_layer_startup_system(
                     resource_tile_storage.set(&tile_pos, resource_tile.id());
 
                     if *resource_id == BUSH_TILE_ID {
-                        resource_tile.insert(Bush);
                         resource_tile.insert(Name::new("Bush"));
+                        resource_tile.insert(Bush);
+                        resource_tile.insert(Reservable);
                     }
 
                     break; // Stop after placing the first valid resource
