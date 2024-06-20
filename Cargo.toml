@@ -86,6 +86,7 @@ big-brain = "0.20.0"
 bevy-inspector-egui = "0.24.0"
 serde_json = "1.0.117"
 derive_builder = "0.20.0"
+bevy_spatial = "0.8.0"
 
 [build-dependencies]
 embed-resource = "1"
