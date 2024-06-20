@@ -12,9 +12,14 @@ use rand_chacha::ChaCha8Rng;
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
-const WIDTH: u32 = 128;
-const HEIGHT: u32 = 128;
+const WIDTH: u32 = 16;
+const HEIGHT: u32 = 16;
 const TILE_SIZE: f32 = 16.0;
+const TILEMAP_TILE_SIZE: TilemapTileSize = TilemapTileSize {
+    x: TILE_SIZE,
+    y: TILE_SIZE,
+};
+const TILEMAP_TYPE: TilemapType = TilemapType::Square;
 
 // master.png
 const GRASS_TILE_ID: u16 = 17;
@@ -30,7 +35,8 @@ impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TilemapPlugin);
         app.add_systems(Startup, startup);
-        app.add_systems(PostStartup, resource_layer_startup_system);
+        app.add_systems(PostStartup, (resource_layer_startup_system, foo));
+        app.add_systems(Update, update_tile_transform_system);
     }
 }
 
@@ -38,6 +44,16 @@ impl Plugin for WorldgenPlugin {
 pub struct World {
     pub wave: Wave,
     pub patterns: OverlappingPatterns<u16>,
+}
+
+// TODO(refactoring): This is the correct way to get the world coordinate of a tile
+fn foo(q: Query<(&TilemapGridSize, &TilemapType)>) {
+    let (tilemap_grid_size, tilemap_type) = q.iter().next().unwrap();
+    dbg!(tilemap_grid_size);
+    trace!(
+        "{}",
+        TilePos::new(1, 1).center_in_world(tilemap_grid_size, tilemap_type)
+    );
 }
 
 fn startup(mut commands: Commands, assets: Res<AssetServer>) {
@@ -274,6 +290,7 @@ fn resource_layer_startup_system(
                         resource_tile.insert(Name::new("Bush"));
                         resource_tile.insert(Bush);
                         resource_tile.insert(Reservable);
+                        resource_tile.insert(Transform::default());
                     }
 
                     break; // Stop after placing the first valid resource
@@ -300,4 +317,13 @@ fn resource_layer_startup_system(
             transform: Transform::from_xyz(0.0, 0.0, 5.0),
             ..Default::default()
         });
+}
+
+/// Maintain the `Transform` component on tiles so that they can be used in spatial queries
+fn update_tile_transform_system(mut q: Query<(&mut Transform, &TilePos)>) {
+    for (mut transform, tilepos) in q.iter_mut() {
+        transform.translation = tilepos
+            .center_in_world(&TILEMAP_TILE_SIZE.into(), &TILEMAP_TYPE)
+            .extend(0.0);
+    }
 }

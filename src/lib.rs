@@ -24,6 +24,8 @@ use crate::villager::VillagerPlugin;
 use crate::worldgen::WorldgenPlugin;
 
 use crate::agent::AgentPlugin;
+use crate::inspector::InspectorPlugin;
+use crate::reservations::ReservationsPlugin;
 use bevy::app::App;
 #[cfg(debug_assertions)]
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -33,8 +35,6 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_pancam::PanCamPlugin;
 use big_brain::BigBrainPlugin;
 use seldom_state::StateMachinePlugin;
-use crate::inspector::InspectorPlugin;
-use crate::reservations::ReservationsPlugin;
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html

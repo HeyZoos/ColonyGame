@@ -16,8 +16,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_player() {
-}
+fn spawn_player() {}
 
 fn move_player(
     time: Res<Time>,

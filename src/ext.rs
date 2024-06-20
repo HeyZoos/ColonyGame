@@ -42,9 +42,12 @@ pub impl Vec2 {
     /// assert_eq!(coord, Coord { x: 2, y: 3 });
     /// ```
     fn to_coord(&self) -> Coord {
-        Coord { x: self.x as i32, y: self.y as i32 }
+        Coord {
+            x: self.x as i32,
+            y: self.y as i32,
+        }
     }
-    
+
     /// Converts a `Vec2` from world space (16x16 units) to local space.
     ///
     /// # Examples

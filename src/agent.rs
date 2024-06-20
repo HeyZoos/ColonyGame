@@ -8,6 +8,8 @@ use crate::reservations::{
 use crate::villager::{find_path, Movement};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use bevy_spatial::kdtree::KDTree2;
+use bevy_spatial::SpatialAccess;
 use big_brain::prelude::*;
 use grid_2d::Coord;
 use serde_json::json;
@@ -58,10 +60,7 @@ impl<T: Clone + Component + Debug> Default for MoveToNearest<T> {
 
 pub fn move_to_nearest_system<T: Clone + Component + Debug>(
     world: Res<crate::worldgen::World>,
-    mut unreserved_tiles: Query<
-        (Entity, &mut TilePos),
-        (With<T>, With<Reservable>, Without<Reserved>),
-    >,
+    reservables: Res<KDTree2<Reservable>>,
     reserved_tiles: Query<(Entity, &mut TilePos), (With<T>, With<Reservable>, With<Reserved>)>,
     mut agents_without_reservation: Query<
         (&mut Blackboard, &mut Transform, &mut Movement),
@@ -79,68 +78,38 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
 
         match *action_state {
             ActionState::Requested => {
-                if let Ok(agent) = agents_without_reservation.get_mut(actor.0) {
-                    // Get all possible unreserved target tiles
-                    let mut possible_targets: Vec<_> = unreserved_tiles
-                        .iter_mut()
-                        .map(|(entity, t)| {
-                            let x = t.x as f32 * 16.0;
-                            let y = t.y as f32 * 16.0;
-                            (entity, t, Vec2 { x, y })
-                        })
-                        .collect();
-
-                    trace!(
-                        "Searching for possible tiles for agent {:?}, unreserved tile count = {}",
-                        actor.0,
-                        possible_targets.len()
-                    );
-
-                    let agent_transform = agent.1;
-                    let start_coord = agent_transform.translation.xy().to_grid_space().to_coord();
-
-                    // Order by distance
-                    possible_targets.sort_by(|(_, _, a), (_, _, b)| {
-                        let delta_a = *a - agent_transform.translation.xy();
-                        let delta_b = *b - agent_transform.translation.xy();
-                        delta_a.length().partial_cmp(&delta_b.length()).unwrap()
-                    });
+                if let Ok((_, transform, _)) = agents_without_reservation.get_mut(actor.0) {
+                    // Get k nearest reservable entities
+                    let targets = reservables.k_nearest_neighbour(transform.translation.xy(), 5);
 
                     // Attempt to search the nearest 10 possible targets
-                    for (possible_target_entity, tile_position, tile_world_position) in
-                        possible_targets.iter().take(10)
-                    {
+                    for (target_position, target_entity) in targets.iter() {
                         let path_option = find_path(
                             &world,
-                            start_coord,
-                            Coord {
-                                x: tile_position.x as i32,
-                                y: tile_position.y as i32,
-                            },
+                            transform.translation.xy().to_coord(),
+                            target_position.xy().to_coord(),
                         );
 
                         if path_option.is_some() {
                             trace!(
-                                "Found reachable {:?} (Tile Coordinate {}, {}) (World Position {}, {}) - attempting a to create a reservation on {:?} for {:?}",
+                                "Found reachable {:?} (World Position {}, {}) - attempting a to create a reservation on {:?} for {:?}",
                                 std::any::type_name::<T>(),
-                                tile_position.x,
-                                tile_position.y,
-                                tile_world_position.x,
-                                tile_world_position.y,
-                                possible_target_entity,
+                                target_position.x,
+                                target_position.y,
+                                target_position,
                                 actor.0
                             );
 
                             reservation_request_writer.send(
                                 ReservationRequestBuilder::default()
                                     .requester(actor.0)
-                                    .target(*possible_target_entity)
+                                    .target(target_entity.unwrap())
                                     .build()
                                     .unwrap(),
                             );
 
                             // This shouldn't be here but whatever
-                            move_to.goal = Some(*tile_world_position);
+                            move_to.goal = Some(target_position.xy());
 
                             *action_state = ActionState::Requested;
                             return;
