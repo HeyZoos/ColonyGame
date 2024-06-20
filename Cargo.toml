@@ -62,6 +62,7 @@ bevy = { version = "0.13", default-features = false, features = [
     "default_font",
     "webgl2",
     "bevy_debug_stepping",
+    "trace"
 ] }
 bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap.git", rev = "a7b308a" }
 bevy_kira_audio = { version = "0.19" }
