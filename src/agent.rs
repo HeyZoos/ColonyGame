@@ -61,7 +61,7 @@ impl<T: Clone + Component + Debug> Default for MoveToNearest<T> {
 pub fn move_to_nearest_system<T: Clone + Component + Debug>(
     world: Res<crate::worldgen::World>,
     reservables: Res<KDTree2<Reservable>>,
-    reserved_tiles: Query<(Entity, &mut TilePos), (With<T>, With<Reservable>, With<Reserved>)>,
+    reserved_tiles: Query<(Entity, &mut TilePos), (With<T>, With<Reserved>)>,
     mut agents_without_reservation: Query<
         (&mut Blackboard, &mut Transform, &mut Movement),
         (With<HasThinker>, Without<Reservation>),
@@ -80,14 +80,14 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
             ActionState::Requested => {
                 if let Ok((_, transform, _)) = agents_without_reservation.get_mut(actor.0) {
                     // Get k nearest reservable entities
-                    let targets = reservables.k_nearest_neighbour(transform.translation.xy(), 5);
+                    let targets = reservables.k_nearest_neighbour(transform.translation.xy(), 10);
 
                     // Attempt to search the nearest 10 possible targets
                     for (target_position, target_entity) in targets.iter() {
                         let path_option = find_path(
                             &world,
-                            transform.translation.xy().to_coord(),
-                            target_position.xy().to_coord(),
+                            transform.translation.xy().to_grid_space().to_coord(),
+                            target_position.xy().to_grid_space().to_coord(),
                         );
 
                         if path_option.is_some() {
@@ -136,6 +136,7 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                             },
                         );
 
+                        trace!("Hello?");
                         if let Some((mut path, _)) = path_option {
                             // We don't want to include the first goal if it is the same as the start
                             if path.first() == Some(&start_coord) {

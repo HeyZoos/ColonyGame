@@ -24,14 +24,11 @@ use crate::villager::VillagerPlugin;
 use crate::worldgen::WorldgenPlugin;
 
 use crate::agent::AgentPlugin;
-use crate::inspector::InspectorPlugin;
 use crate::reservations::ReservationsPlugin;
 use bevy::app::App;
 #[cfg(debug_assertions)]
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::input::common_conditions::input_toggle_active;
 use bevy::prelude::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_pancam::PanCamPlugin;
 use big_brain::BigBrainPlugin;
 use seldom_state::StateMachinePlugin;
@@ -59,7 +56,7 @@ impl Plugin for GamePlugin {
             AgentPlugin,
             AnimationPlugin,
             BigBrainPlugin::new(PreUpdate),
-            InspectorPlugin,
+            // crate::inspector::InspectorPlugin,
             InternalAudioPlugin,
             LoadingPlugin,
             MenuPlugin,
@@ -68,7 +65,6 @@ impl Plugin for GamePlugin {
             ReservationsPlugin,
             StateMachinePlugin,
             VillagerPlugin,
-            WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)),
             WorldgenPlugin,
         ));
 
