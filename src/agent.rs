@@ -1,7 +1,7 @@
 /// NOTE: Avoid using action state cancelled
 use crate::animation::GatheringTag;
 use crate::blackboard::Blackboard;
-use crate::ext::{TilePosExt, Vec2Ext};
+use crate::ext::Vec2Ext;
 use crate::reservations::{
     Reservable, Reservation, ReservationRequest, ReservationRequestBuilder, Reserved,
 };
@@ -11,7 +11,6 @@ use bevy_ecs_tilemap::prelude::*;
 use bevy_spatial::kdtree::KDTree2;
 use bevy_spatial::SpatialAccess;
 use big_brain::prelude::*;
-use grid_2d::Coord;
 use serde_json::json;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -86,8 +85,8 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     for (target_position, target_entity) in targets.iter() {
                         let path_option = find_path(
                             &world,
-                            transform.translation.xy().to_tilepos().to_coord(),
-                            target_position.xy().to_tilepos().to_coord(),
+                            transform.translation.xy().to_tilepos(),
+                            target_position.xy().to_tilepos(),
                         );
 
                         if path_option.is_some() {
@@ -123,21 +122,14 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     let mut agent_movement = agent.2;
                     let reservation = agent.3;
 
-                    let start_coord = agent_transform.translation.xy().to_tilepos().to_coord();
+                    let start_coord = agent_transform.translation.xy().to_tilepos();
                     let goal_tile = reserved_tiles.get(reservation.target);
 
-                    if let Ok((goal_tile_entity, goal_tile_position)) = goal_tile {
-                        let path_option = find_path(
-                            &world,
-                            start_coord,
-                            Coord {
-                                x: goal_tile_position.x as i32,
-                                y: goal_tile_position.y as i32,
-                            },
-                        );
+                    if let Ok((goal_tile_entity, &goal_tile_position)) = goal_tile {
+                        let path_option = find_path(&world, start_coord, goal_tile_position);
 
                         trace!("Hello?");
-                        if let Some((mut path, _)) = path_option {
+                        if let Some(mut path) = path_option {
                             // We don't want to include the first goal if it is the same as the start
                             if path.first() == Some(&start_coord) {
                                 path.remove(0);

@@ -1,32 +1,9 @@
-use crate::villager::Direction;
 use crate::worldgen::{TILEMAP_SIZE, TILEMAP_TILE_SIZE, TILEMAP_TYPE};
 use bevy::math::Vec2;
+use bevy_ecs_tilemap::helpers::square_grid::neighbors::SquareDirection;
 use bevy_ecs_tilemap::prelude::TilePos;
 use extend::ext;
 use grid_2d::Coord;
-
-#[ext]
-pub impl Coord {
-    /// Converts a `Coord` to a `Vec2`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bevy::prelude::*;
-    /// use bevy_game::ext::CoordExt;
-    /// use grid_2d::Coord;
-    ///
-    /// let coord = Coord { x: 3, y: 4 };
-    /// let vec = coord.to_vec2();
-    /// assert_eq!(vec, Vec2::new(3.0, 4.0));
-    /// ```
-    fn to_vec2(&self) -> Vec2 {
-        Vec2 {
-            x: self.x as f32,
-            y: self.y as f32,
-        }
-    }
-}
 
 #[ext]
 pub impl TilePos {
@@ -35,6 +12,10 @@ pub impl TilePos {
             x: self.x as i32,
             y: self.y as i32,
         }
+    }
+
+    fn to_world_space(&self) -> Vec2 {
+        self.center_in_world(&TILEMAP_TILE_SIZE.into(), &TILEMAP_TYPE)
     }
 }
 
@@ -61,22 +42,6 @@ pub impl Vec2 {
             &TILEMAP_TYPE,
         )
         .unwrap()
-    }
-
-    /// Converts a `Vec2` to world space (16x16 units).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bevy::prelude::*;
-    /// use bevy_game::ext::Vec2Ext;
-    ///
-    /// let vec = Vec2::new(2.0, 3.0);
-    /// let world_space_vec = vec.to_world_space();
-    /// assert_eq!(world_space_vec, Vec2::new(32.0, 48.0));
-    /// ```
-    fn to_world_space(&self) -> Vec2 {
-        *self * 16.0
     }
 
     /// Returns a normalized vector pointing from `self` towards `other`.
@@ -106,17 +71,17 @@ pub impl Vec2 {
     /// use bevy_game::villager::Direction;
     ///
     /// let vec = Vec2::new(0.1, 0.9);
-    /// assert_eq!(vec.to_direction(), Some(Direction::Up));
+    /// assert_eq!(vec.to_direction(), Some(SquareDirection::North));
     ///
     /// let invalid_vec = Vec2::new(1.1, 1.1);
     /// assert_eq!(invalid_vec.to_direction(), None);
     /// ```
-    fn to_direction(&self) -> Option<Direction> {
+    fn to_direction(&self) -> Option<SquareDirection> {
         match self.round() {
-            v if v == Vec2::new(0.0, 1.0) => Some(Direction::Up),
-            v if v == Vec2::new(0.0, -1.0) => Some(Direction::Down),
-            v if v == Vec2::new(-1.0, 0.0) => Some(Direction::Left),
-            v if v == Vec2::new(1.0, 0.0) => Some(Direction::Right),
+            v if v == Vec2::new(0.0, 1.0) => Some(SquareDirection::North),
+            v if v == Vec2::new(0.0, -1.0) => Some(SquareDirection::South),
+            v if v == Vec2::new(-1.0, 0.0) => Some(SquareDirection::West),
+            v if v == Vec2::new(1.0, 0.0) => Some(SquareDirection::East),
             _ => None,
         }
     }
@@ -133,14 +98,14 @@ pub impl Vec2 {
     /// let vec1 = Vec2::new(1.0, 1.0);
     /// let vec2 = Vec2::new(4.0, 1.0);
     /// let direction = vec1.to_direction_towards(&vec2);
-    /// assert_eq!(direction, Some(Direction::Right));
+    /// assert_eq!(direction, Some(SquareDirection::East));
     ///
     /// let vec1 = Vec2::new(0.0, 0.0);
     /// let vec2 = Vec2::new(1.0, 0.0);
     /// let direction = vec1.to_direction_towards(&vec2);
-    /// assert_eq!(direction, Some(Direction::Right));
+    /// assert_eq!(direction, Some(SquareDirection::East));
     /// ```
-    fn to_direction_towards(&self, other: &Vec2) -> Option<Direction> {
-        self.towards(other).normalize().to_direction()
+    fn to_direction_towards(&self, other: &Vec2) -> Option<SquareDirection> {
+        self.towards(other).to_direction()
     }
 }

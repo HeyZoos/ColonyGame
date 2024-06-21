@@ -2,12 +2,14 @@ use crate::agent::{Bush, GatherAction, MoveToNearest, WorkNeedScorer};
 use crate::animation::AnimationBundle;
 use crate::blackboard::Blackboard;
 use crate::ext::*;
+use crate::worldgen::TILEMAP_SIZE;
 use bevy::prelude::*;
 use bevy::utils::petgraph::matrix_graph::Zero;
+use bevy_ecs_tilemap::helpers::square_grid::neighbors::{Neighbors, SquareDirection};
+use bevy_ecs_tilemap::prelude::TilePos;
 use big_brain::actions::Steps;
 use big_brain::pickers::FirstToScore;
 use big_brain::prelude::Thinker;
-use grid_2d::Coord;
 use pathfinding::prelude::astar;
 use std::time::Duration;
 
@@ -23,34 +25,36 @@ impl Plugin for VillagerPlugin {
 
 pub fn find_path(
     world: &crate::worldgen::World,
-    start: Coord,
-    goal: Coord,
-) -> Option<(Vec<Coord>, u32)> {
+    start: TilePos,
+    goal: TilePos,
+) -> Option<Vec<TilePos>> {
     astar(
         &start,
-        |&Coord { x, y }| {
-            let mut next_coords = vec![
-                Coord { x: x + 1, y },
-                Coord { x: x - 1, y },
-                Coord { x, y: y + 1 },
-                Coord { x, y: y - 1 },
-            ];
+        |&current| {
+            let mut next = vec![];
+            let neighbors =
+                Neighbors::get_square_neighboring_positions(&current, &TILEMAP_SIZE, false);
 
-            next_coords.retain(|&coord| {
-                if let Some(cell) = world.wave.grid().get(coord) {
+            for &neighbor in neighbors.iter() {
+                let cell = world.wave.grid().get(neighbor.to_coord());
+
+                if let Some(cell) = cell {
                     let pattern_id = cell.chosen_pattern_id().unwrap();
                     let value = world.patterns.pattern_top_left_value(pattern_id);
-                    *value != 255
-                } else {
-                    false
+                    if *value == 255 {
+                        continue;
+                    }
                 }
-            });
 
-            next_coords.into_iter().map(|c| (c, 1))
+                next.push((neighbor, 1));
+            }
+
+            next
         },
-        |coord| coord.distance2(goal) / 3,
-        |coord| *coord == goal,
+        |&current| current.to_coord().distance2(goal.to_coord()),
+        |&current| current == goal,
     )
+    .map(|(path, _)| path)
 }
 
 fn post_startup(
@@ -132,52 +136,22 @@ fn animate_sprite(
 #[derive(Component)]
 struct Speed(f32);
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Direction {
-    /// Converts a `Direction` to a `Vec2`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bevy::prelude::*;
-    /// use bevy_game::villager::Direction;
-    ///
-    /// let dir = Direction::Up;
-    /// assert_eq!(dir.to_vec2(), Vec2::new(0.0, 1.0));
-    /// ```
-    pub fn to_vec2(&self) -> Vec2 {
-        match self {
-            Direction::Up => Vec2::new(0.0, 1.0),
-            Direction::Down => Vec2::new(0.0, -1.0),
-            Direction::Left => Vec2::new(-1.0, 0.0),
-            Direction::Right => Vec2::new(1.0, 0.0),
-        }
-    }
-}
-
 #[derive(Component)]
 pub struct Movement {
-    pub path: Vec<Coord>,
-    pub direction: Direction,
+    pub path: Vec<TilePos>,
+    pub direction: SquareDirection,
 }
 
 impl Movement {
-    fn new(path: Vec<Coord>) -> Self {
+    fn new(path: Vec<TilePos>) -> Self {
         Movement {
             path,
-            direction: Direction::Down,
+            direction: SquareDirection::South,
         }
     }
 
     pub fn target(&self) -> Option<Vec2> {
-        self.path.first().map(|v| v.to_vec2().to_world_space())
+        self.path.first().map(|v| v.to_world_space())
     }
 }
 
