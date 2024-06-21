@@ -134,7 +134,7 @@ fn animate_sprite(
 }
 
 #[derive(Component)]
-struct Speed(f32);
+pub struct Speed(f32);
 
 #[derive(Component)]
 pub struct Movement {
@@ -161,7 +161,7 @@ impl Default for Movement {
     }
 }
 
-fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &mut Movement)>) {
+pub fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &mut Movement)>) {
     let delta = time.delta_seconds();
 
     if delta.is_zero() {
@@ -185,7 +185,7 @@ fn movement_system(time: Res<Time>, mut query: Query<(&mut Transform, &Speed, &m
                 transform.translation.y += heading.y * speed.0 * delta;
 
                 // Update the direction
-                if let Some(direction) = transform.translation.xy().to_direction_towards(&target) {
+                if let Some(direction) = transform.translation.xy().look_at(&target) {
                     movement.direction = direction;
                 }
             }

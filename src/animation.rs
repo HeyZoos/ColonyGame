@@ -1,5 +1,4 @@
-use crate::ext::*;
-use crate::villager::{AnimationIndices, Movement};
+use crate::villager::{movement_system, AnimationIndices, Movement};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::helpers::square_grid::neighbors::SquareDirection;
 use seldom_state::prelude::*;
@@ -9,7 +8,10 @@ pub struct AnimationPlugin;
 impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, update_animation_indices_in_idle_state);
-        app.add_systems(Update, update_animation_indices_in_moving_state);
+        app.add_systems(
+            Update,
+            update_animation_indices_in_moving_state.after(movement_system),
+        );
         app.add_systems(Update, update_animation_indices_in_gathering_state);
     }
 }
@@ -81,128 +83,53 @@ fn trigger_when_not_gathering(
     !query.contains(entity)
 }
 
-fn update_animation_indices_in_idle_state(
-    mut query: Query<(&Movement, &mut AnimationIndices, &mut TextureAtlas), With<IdleState>>,
+fn update_animation_indices<T: Component>(
+    query: &mut Query<(&Movement, &mut AnimationIndices, &mut TextureAtlas), With<T>>,
+    animation_ranges: &[(SquareDirection, usize, usize)],
 ) {
     for (movement, mut animation_index, mut atlas) in query.iter_mut() {
-        match movement.direction {
-            SquareDirection::North => {
-                if animation_index.first != 8 {
-                    animation_index.first = 8;
-                    animation_index.last = 15;
-                    atlas.index = animation_index.first;
-                }
+        for &(direction, first, last) in animation_ranges {
+            if movement.direction == direction && animation_index.first != first {
+                animation_index.first = first;
+                animation_index.last = last;
+                atlas.index = animation_index.first;
             }
-            SquareDirection::South => {
-                if animation_index.first != 0 {
-                    animation_index.first = 0;
-                    animation_index.last = 7;
-                    atlas.index = animation_index.first;
-                }
-            }
-            SquareDirection::West => {
-                if animation_index.first != 16 {
-                    animation_index.first = 16;
-                    animation_index.last = 23;
-                    atlas.index = animation_index.first;
-                }
-            }
-            SquareDirection::East => {
-                if animation_index.first != 24 {
-                    animation_index.first = 24;
-                    animation_index.last = 31;
-                    atlas.index = animation_index.first;
-                }
-            }
-            _ => unimplemented!(),
         }
     }
 }
 
-fn update_animation_indices_in_moving_state(
-    mut query: Query<
-        (
-            &Transform,
-            &Movement,
-            &mut AnimationIndices,
-            &mut TextureAtlas,
-        ),
-        With<MovingState>,
-    >,
+fn update_animation_indices_in_idle_state(
+    mut query: Query<(&Movement, &mut AnimationIndices, &mut TextureAtlas), With<IdleState>>,
 ) {
-    for (transform, movement, mut animation_index, mut atlas) in query.iter_mut() {
-        if let Some(target) = movement.target() {
-            if let Some(direction) = transform.translation.xy().to_direction_towards(&target) {
-                match direction {
-                    SquareDirection::North => {
-                        if animation_index.first != 40 {
-                            animation_index.first = 40;
-                            animation_index.last = 47;
-                            atlas.index = animation_index.first;
-                        }
-                    }
-                    SquareDirection::South => {
-                        if animation_index.first != 32 {
-                            animation_index.first = 32;
-                            animation_index.last = 39;
-                            atlas.index = animation_index.first;
-                        }
-                    }
-                    SquareDirection::East => {
-                        if animation_index.first != 48 {
-                            animation_index.first = 48;
-                            animation_index.last = 55;
-                            atlas.index = animation_index.first;
-                        }
-                    }
-                    SquareDirection::West => {
-                        if animation_index.first != 56 {
-                            animation_index.first = 56;
-                            animation_index.last = 63;
-                            atlas.index = animation_index.first;
-                        }
-                    }
-                    _ => unreachable!(),
-                }
-            }
-        }
-    }
+    let animation_ranges = [
+        (SquareDirection::North, 8, 15),
+        (SquareDirection::South, 0, 7),
+        (SquareDirection::West, 16, 23),
+        (SquareDirection::East, 24, 31),
+    ];
+    update_animation_indices(&mut query, &animation_ranges);
+}
+
+fn update_animation_indices_in_moving_state(
+    mut query: Query<(&Movement, &mut AnimationIndices, &mut TextureAtlas), With<MovingState>>,
+) {
+    let animation_ranges = [
+        (SquareDirection::North, 40, 47),
+        (SquareDirection::South, 32, 39),
+        (SquareDirection::East, 48, 55),
+        (SquareDirection::West, 56, 63),
+    ];
+    update_animation_indices(&mut query, &animation_ranges);
 }
 
 fn update_animation_indices_in_gathering_state(
     mut query: Query<(&Movement, &mut AnimationIndices, &mut TextureAtlas), With<GatheringState>>,
 ) {
-    for (movement, mut animation_index, mut atlas) in query.iter_mut() {
-        match movement.direction {
-            SquareDirection::North => {
-                if animation_index.first != 104 {
-                    animation_index.first = 104;
-                    animation_index.last = 111;
-                    atlas.index = animation_index.first;
-                }
-            }
-            SquareDirection::South => {
-                if animation_index.first != 96 {
-                    animation_index.first = 96;
-                    animation_index.last = 103;
-                    atlas.index = animation_index.first;
-                }
-            }
-            SquareDirection::East => {
-                if animation_index.first != 120 {
-                    animation_index.first = 120;
-                    animation_index.last = 127;
-                    atlas.index = animation_index.first;
-                }
-            }
-            SquareDirection::West => {
-                if animation_index.first != 112 {
-                    animation_index.first = 112;
-                    animation_index.last = 119;
-                    atlas.index = animation_index.first;
-                }
-            }
-            _ => unreachable!(),
-        }
-    }
+    let animation_ranges = [
+        (SquareDirection::North, 104, 111),
+        (SquareDirection::South, 96, 103),
+        (SquareDirection::East, 120, 127),
+        (SquareDirection::West, 112, 119),
+    ];
+    update_animation_indices(&mut query, &animation_ranges);
 }
