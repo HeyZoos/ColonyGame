@@ -1,7 +1,9 @@
 use crate::agent::{Bush, GatherAction, MoveToNearest, WorkNeedScorer};
 use crate::animation::AnimationBundle;
+use crate::assets::CharacterAssets;
 use crate::blackboard::Blackboard;
 use crate::ext::*;
+use crate::states::States::Play;
 use crate::worldgen::TILEMAP_SIZE;
 use bevy::prelude::*;
 use bevy::utils::petgraph::matrix_graph::Zero;
@@ -17,9 +19,10 @@ pub struct VillagerPlugin;
 
 impl Plugin for VillagerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PostStartup, post_startup)
-            .add_systems(Update, animate_sprite)
-            .add_systems(Update, movement_system);
+        app.add_systems(OnEnter(Play), setup_villagers).add_systems(
+            Update,
+            (animate_sprite, movement_system).run_if(in_state(Play)),
+        );
     }
 }
 
@@ -57,19 +60,7 @@ pub fn find_path(
     .map(|(path, _)| path)
 }
 
-fn post_startup(
-    mut cmds: Commands,
-    assets: Res<AssetServer>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    // Load the character sprite sheet
-    let texture: Handle<Image> = assets.load("character.png");
-
-    // Create a TextureAtlas from the sprite sheet
-    let layout = TextureAtlasLayout::from_grid(Vec2::new(48.0, 48.0), 8, 24, None, None);
-
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
-
+fn setup_villagers(mut cmds: Commands, images: Res<CharacterAssets>) {
     let animation_indices = AnimationIndices { first: 0, last: 7 };
 
     for i in 1..7 {
@@ -82,9 +73,9 @@ fn post_startup(
         cmds.spawn((
             Name::new("Villager"),
             SpriteSheetBundle {
-                texture: texture.clone(),
+                texture: images.image.clone(),
                 atlas: TextureAtlas {
-                    layout: texture_atlas_layout.clone(),
+                    layout: images.layout.clone(),
                     index: animation_indices.first,
                 },
                 transform: Transform::from_xyz(

@@ -3,6 +3,7 @@
 pub mod actions;
 pub mod agent;
 pub mod animation;
+mod assets;
 pub mod audio;
 pub mod blackboard;
 pub mod ext;
@@ -11,6 +12,7 @@ pub mod loading;
 pub mod menu;
 pub mod player;
 pub mod reservations;
+mod states;
 pub mod villager;
 pub mod worldgen;
 
@@ -55,6 +57,7 @@ impl Plugin for GamePlugin {
             ActionsPlugin,
             AgentPlugin,
             AnimationPlugin,
+            assets::AssetsPlugin,
             BigBrainPlugin::new(PreUpdate),
             // crate::inspector::InspectorPlugin,
             InternalAudioPlugin,
@@ -63,6 +66,7 @@ impl Plugin for GamePlugin {
             PanCamPlugin,
             PlayerPlugin,
             ReservationsPlugin,
+            states::StatesPlugin,
             StateMachinePlugin,
             VillagerPlugin,
             WorldgenPlugin,
