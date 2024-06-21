@@ -1,7 +1,7 @@
 /// NOTE: Avoid using action state cancelled
 use crate::animation::GatheringTag;
 use crate::blackboard::Blackboard;
-use crate::ext::Vec2Ext;
+use crate::ext::{TilePosExt, Vec2Ext};
 use crate::reservations::{
     Reservable, Reservation, ReservationRequest, ReservationRequestBuilder, Reserved,
 };
@@ -86,8 +86,8 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     for (target_position, target_entity) in targets.iter() {
                         let path_option = find_path(
                             &world,
-                            transform.translation.xy().to_grid_space().to_coord(),
-                            target_position.xy().to_grid_space().to_coord(),
+                            transform.translation.xy().to_tilepos().to_coord(),
+                            target_position.xy().to_tilepos().to_coord(),
                         );
 
                         if path_option.is_some() {
@@ -123,7 +123,7 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     let mut agent_movement = agent.2;
                     let reservation = agent.3;
 
-                    let start_coord = agent_transform.translation.xy().to_grid_space().to_coord();
+                    let start_coord = agent_transform.translation.xy().to_tilepos().to_coord();
                     let goal_tile = reserved_tiles.get(reservation.target);
 
                     if let Ok((goal_tile_entity, goal_tile_position)) = goal_tile {

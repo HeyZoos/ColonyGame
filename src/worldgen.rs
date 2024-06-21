@@ -12,14 +12,9 @@ use rand_chacha::ChaCha8Rng;
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
-const WIDTH: u32 = 256;
-const HEIGHT: u32 = 256;
-const TILE_SIZE: f32 = 16.0;
-const TILEMAP_TILE_SIZE: TilemapTileSize = TilemapTileSize {
-    x: TILE_SIZE,
-    y: TILE_SIZE,
-};
-const TILEMAP_TYPE: TilemapType = TilemapType::Square;
+pub const TILEMAP_SIZE: TilemapSize = TilemapSize::new(256, 256);
+pub const TILEMAP_TILE_SIZE: TilemapTileSize = TilemapTileSize::new(16.0, 16.0);
+pub const TILEMAP_TYPE: TilemapType = TilemapType::Square;
 
 // master.png
 const GRASS_TILE_ID: u16 = 17;
@@ -102,12 +97,8 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
         let texture_handle = assets.load(tileset_image_path);
 
         // Build tilemap based on WFC results
-        let tilemap_size = TilemapSize {
-            x: WIDTH,
-            y: HEIGHT,
-        };
         let tilemap_entity = commands.spawn_empty().id();
-        let mut tile_storage = TileStorage::empty(tilemap_size);
+        let mut tile_storage = TileStorage::empty(TILEMAP_SIZE);
         populate_tilemap(
             &mut commands,
             &mut tile_storage,
@@ -125,19 +116,15 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
             });
         }
 
-        let tile_size = TilemapTileSize {
-            x: TILE_SIZE,
-            y: TILE_SIZE,
-        };
-        let grid_size = tile_size.into();
+        let grid_size = TILEMAP_TILE_SIZE.into();
         let map_type = TilemapType::default();
         commands.entity(tilemap_entity).insert(TilemapBundle {
             grid_size,
             map_type,
-            size: tilemap_size,
+            size: TILEMAP_SIZE,
             storage: tile_storage,
             texture: TilemapTexture::Single(texture_handle),
-            tile_size,
+            tile_size: TILEMAP_TILE_SIZE,
             transform: Transform::from_xyz(0.0, 0.0, layer_idx as f32),
             ..Default::default()
         });
@@ -218,7 +205,7 @@ fn wfc(patterns: OverlappingPatterns<u16>, seed: u64) -> Wave {
     let global_stats = patterns.global_stats();
 
     let runner = wfc::RunOwn::new_wrap_forbid(
-        Size::new(WIDTH, HEIGHT),
+        Size::new(TILEMAP_SIZE.x, TILEMAP_SIZE.y),
         &global_stats,
         wfc::wrap::WrapNone,
         wfc::ForbidNothing,
@@ -245,12 +232,8 @@ fn resource_layer_startup_system(
     let resource_texture_handle = assets.load(resource_tileset_path);
 
     // Create a new tilemap for resources
-    let resource_tilemap_size = TilemapSize {
-        x: WIDTH,
-        y: HEIGHT,
-    };
     let resource_tilemap_entity = commands.spawn_empty().id();
-    let mut resource_tile_storage = TileStorage::empty(resource_tilemap_size);
+    let mut resource_tile_storage = TileStorage::empty(TILEMAP_SIZE);
 
     // Define resource types and their corresponding noise thresholds
     // Put the higher priority items higher
@@ -299,21 +282,17 @@ fn resource_layer_startup_system(
         }
     }
 
-    let resource_tile_size = TilemapTileSize {
-        x: TILE_SIZE,
-        y: TILE_SIZE,
-    };
-    let resource_grid_size = resource_tile_size.into();
+    let resource_grid_size = TILEMAP_TILE_SIZE.into();
     let resource_map_type = TilemapType::default();
     commands
         .entity(resource_tilemap_entity)
         .insert(TilemapBundle {
             grid_size: resource_grid_size,
             map_type: resource_map_type,
-            size: resource_tilemap_size,
+            size: TILEMAP_SIZE,
             storage: resource_tile_storage,
             texture: TilemapTexture::Single(resource_texture_handle),
-            tile_size: resource_tile_size,
+            tile_size: TILEMAP_TILE_SIZE,
             transform: Transform::from_xyz(0.0, 0.0, 5.0),
             ..Default::default()
         });
