@@ -30,7 +30,7 @@ impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TilemapPlugin);
         app.add_systems(Startup, startup);
-        app.add_systems(PostStartup, (resource_layer_startup_system, foo));
+        app.add_systems(PostStartup, resource_layer_startup_system);
         app.add_systems(Update, update_tile_transform_system);
     }
 }
@@ -39,16 +39,6 @@ impl Plugin for WorldgenPlugin {
 pub struct World {
     pub wave: Wave,
     pub patterns: OverlappingPatterns<u16>,
-}
-
-// TODO(refactoring): This is the correct way to get the world coordinate of a tile
-fn foo(q: Query<(&TilemapGridSize, &TilemapType)>) {
-    let (tilemap_grid_size, tilemap_type) = q.iter().next().unwrap();
-    dbg!(tilemap_grid_size);
-    trace!(
-        "{}",
-        TilePos::new(1, 1).center_in_world(tilemap_grid_size, tilemap_type)
-    );
 }
 
 fn startup(mut commands: Commands, assets: Res<AssetServer>) {
