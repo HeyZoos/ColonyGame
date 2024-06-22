@@ -1,11 +1,14 @@
+use crate::assets::UiAssets;
 use bevy::prelude::*;
+use bevy_nine_slice_ui::{NineSliceUiPlugin, NineSliceUiTexture};
 use bevy_pancam::PanCam;
 
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(crate::states::States::Menu), setup_menu)
+        app.add_plugins(NineSliceUiPlugin::default())
+            .add_systems(OnEnter(crate::states::States::Menu), setup_menu)
             .add_systems(
                 Update,
                 click_play_button.run_if(in_state(crate::states::States::Menu)),
@@ -32,7 +35,7 @@ impl Default for ButtonColors {
 #[derive(Component)]
 struct Menu;
 
-fn setup_menu(mut commands: Commands) {
+fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
     commands
         .spawn(Camera2dBundle {
             transform: Transform::from_xyz(0.0, 0.0, 5.0),
@@ -67,7 +70,9 @@ fn setup_menu(mut commands: Commands) {
         ..default()
     };
 
-    let middle = left.clone();
+    let mut middle = left.clone();
+    middle.style.align_items = AlignItems::Center;
+    middle.style.justify_content = JustifyContent::Center;
     // middle.background_color = BackgroundColor(Color::rgb(0.0, 1.0, 0.0));
 
     let mut right = left.clone();
@@ -95,6 +100,27 @@ fn setup_menu(mut commands: Commands) {
         .id();
 
     let middle_id = commands.spawn(middle).id();
+
+    let button_id = commands
+        .spawn(ButtonBundle {
+            style: Style {
+                width: Val::Px(150.),
+                height: Val::Px(50.),
+                display: Display::Flex,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ..default()
+        })
+        .insert(NineSliceUiTexture::from_slice(
+            ui_assets.buttons_image.clone(),
+            Rect::new(0., 0., 48., 48.),
+        ))
+        .id();
+
+    commands.entity(middle_id).push_children(&[button_id]);
+
     let right_id = commands.spawn(right).id();
     let _root_id = commands
         .spawn((Menu, Name::new("Menu"), root))

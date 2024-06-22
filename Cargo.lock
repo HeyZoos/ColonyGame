@@ -646,6 +646,7 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_ecs_tilemap",
  "bevy_kira_audio",
+ "bevy_nine_slice_ui",
  "bevy_pancam",
  "bevy_spatial",
  "big-brain",
@@ -877,6 +878,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a0d7ef7f2a826d0b19f059035831ce00a5e930435cc53c61e045773d0483f67a"
 dependencies = [
  "glam",
+]
+
+[[package]]
+name = "bevy_nine_slice_ui"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57228e47936d0403dcdd88d97ed5396df8ddf13c6215a91e2de309d00530fbc5"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
