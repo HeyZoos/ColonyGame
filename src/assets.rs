@@ -19,3 +19,9 @@ pub struct CharacterAssets {
     #[asset(texture_atlas_layout(tile_size_x = 48.0, tile_size_y = 48.0, columns = 8, rows = 24))]
     pub layout: Handle<TextureAtlasLayout>,
 }
+
+#[derive(AssetCollection, Resource)]
+pub struct PlayAssets {
+    #[asset(path = "image/ui.png")]
+    pub image: Handle<Image>,
+}

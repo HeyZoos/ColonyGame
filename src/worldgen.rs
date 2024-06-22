@@ -54,6 +54,11 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
         }
     };
 
+    // Create an empty entity to organize tilemaps
+    let environment = commands
+        .spawn((Name::new("Environment"), SpatialBundle::default()))
+        .id();
+
     // For each tilemap layer
     for layer_idx in (0..tiled_map.layers().len()).rev() {
         let layer = tiled_map.layers().nth(layer_idx).unwrap();
@@ -89,7 +94,7 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
         // Build tilemap based on WFC results
         let tilemap_entity = commands.spawn_empty().id();
         let mut tile_storage = TileStorage::empty(TILEMAP_SIZE);
-        populate_tilemap(
+        let children = populate_tilemap(
             &mut commands,
             &mut tile_storage,
             &wave,
@@ -108,16 +113,26 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 
         let grid_size = TILEMAP_TILE_SIZE.into();
         let map_type = TilemapType::default();
-        commands.entity(tilemap_entity).insert(TilemapBundle {
-            grid_size,
-            map_type,
-            size: TILEMAP_SIZE,
-            storage: tile_storage,
-            texture: TilemapTexture::Single(texture_handle),
-            tile_size: TILEMAP_TILE_SIZE,
-            transform: Transform::from_xyz(0.0, 0.0, layer_idx as f32),
-            ..Default::default()
-        });
+        commands
+            .entity(tilemap_entity)
+            .insert((
+                Name::new("Tilemap"),
+                TilemapBundle {
+                    grid_size,
+                    map_type,
+                    size: TILEMAP_SIZE,
+                    storage: tile_storage,
+                    texture: TilemapTexture::Single(texture_handle),
+                    tile_size: TILEMAP_TILE_SIZE,
+                    transform: Transform::from_xyz(0.0, 0.0, layer_idx as f32),
+                    ..Default::default()
+                },
+            ))
+            .push_children(&children);
+
+        commands
+            .entity(environment)
+            .push_children(&[tilemap_entity]);
     }
 }
 
@@ -128,7 +143,9 @@ fn populate_tilemap(
     wave: &Wave,
     tilemap_entity: Entity,
     patterns: OverlappingPatterns<u16>,
-) {
+) -> Vec<Entity> {
+    let mut children = vec![];
+
     for coordinate in wave.grid().coord_iter() {
         let cell = wave.grid().get(coordinate).unwrap();
         let id = cell.chosen_pattern_id().unwrap();
@@ -139,7 +156,7 @@ fn populate_tilemap(
         };
 
         let mut tile = commands.spawn((
-            Name::new("Z - Tile"),
+            Name::new("Tile"),
             TileBundle {
                 position: tile_pos,
                 texture_index: TileTextureIndex(value as u32),
@@ -157,7 +174,12 @@ fn populate_tilemap(
         }
 
         tile_storage.set(&tile_pos, tile.id());
+
+        // Collect children entities so that they can be organized under their tilemap
+        children.push(tile.id());
     }
+
+    children
 }
 
 // u16 -> u16

@@ -7,7 +7,7 @@ mod assets;
 pub mod audio;
 pub mod blackboard;
 pub mod ext;
-pub mod inspector;
+mod inspector;
 pub mod loading;
 pub mod menu;
 pub mod player;
@@ -53,24 +53,25 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<GameState>().add_plugins((
-            ActionsPlugin,
-            AgentPlugin,
-            AnimationPlugin,
-            LoadingPlugin,
-            assets::AssetsPlugin,
-            BigBrainPlugin::new(PreUpdate),
-            // crate::inspector::InspectorPlugin,
-            InternalAudioPlugin,
-            MenuPlugin,
-            PanCamPlugin,
-            PlayerPlugin,
-            ReservationsPlugin,
-            states::StatesPlugin,
-            StateMachinePlugin,
-            VillagerPlugin,
-            WorldgenPlugin,
-        ));
+        app.init_state::<GameState>()
+            .add_plugins((
+                ActionsPlugin,
+                AgentPlugin,
+                AnimationPlugin,
+                LoadingPlugin,
+                assets::AssetsPlugin,
+                BigBrainPlugin::new(PreUpdate),
+                InternalAudioPlugin,
+                MenuPlugin,
+                PanCamPlugin,
+                PlayerPlugin,
+                ReservationsPlugin,
+                states::StatesPlugin,
+                StateMachinePlugin,
+                VillagerPlugin,
+                WorldgenPlugin,
+            ))
+            .add_plugins(inspector::InspectorPlugin);
 
         #[cfg(debug_assertions)]
         {
