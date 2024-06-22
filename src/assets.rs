@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 
-use crate::states::States::Load;
+use crate::states::States::LoadMenu;
 
 pub struct AssetsPlugin;
 
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_loading_state(LoadingState::new(Load).load_collection::<CharacterAssets>());
+        app.add_loading_state(LoadingState::new(LoadMenu).load_collection::<CharacterAssets>());
     }
 }
 

@@ -1,18 +1,16 @@
-use crate::loading::TextureAssets;
-use crate::GameState;
 use bevy::prelude::*;
-use bevy_inspector_egui::egui::Key::V;
 use bevy_pancam::PanCam;
 
 pub struct MenuPlugin;
 
-/// This plugin is responsible for the game menu (containing only one button...)
-/// The menu is only drawn during the State `GameState::Menu` and is removed when that state is exited
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Menu), setup_menu)
-            .add_systems(Update, click_play_button.run_if(in_state(GameState::Menu)))
-            .add_systems(OnExit(GameState::Menu), cleanup_menu);
+        app.add_systems(OnEnter(crate::states::States::Menu), setup_menu)
+            .add_systems(
+                Update,
+                click_play_button.run_if(in_state(crate::states::States::Menu)),
+            )
+            .add_systems(OnExit(crate::states::States::Menu), cleanup_menu);
     }
 }
 
@@ -34,7 +32,7 @@ impl Default for ButtonColors {
 #[derive(Component)]
 struct Menu;
 
-fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
+fn setup_menu(mut commands: Commands) {
     commands
         .spawn(Camera2dBundle {
             transform: Transform::from_xyz(0.0, 0.0, 5.0),
@@ -69,7 +67,7 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
         ..default()
     };
 
-    let mut middle = left.clone();
+    let middle = left.clone();
     // middle.background_color = BackgroundColor(Color::rgb(0.0, 1.0, 0.0));
 
     let mut right = left.clone();
@@ -98,57 +96,19 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
 
     let middle_id = commands.spawn(middle).id();
     let right_id = commands.spawn(right).id();
-    let root_id = commands
+    let _root_id = commands
         .spawn((Menu, Name::new("Menu"), root))
         .push_children(&[left_id, middle_id, right_id]);
-
-    commands.entity(right_id).with_children(|children| {
-        children
-            .spawn((
-                ButtonBundle {
-                    style: Style {
-                        justify_content: JustifyContent::SpaceAround,
-                        align_items: AlignItems::Center,
-                        ..Default::default()
-                    },
-                    background_color: Color::NONE.into(),
-                    ..Default::default()
-                },
-                ButtonColors {
-                    normal: Color::NONE,
-                    ..default()
-                },
-                OpenLink("https://bevyengine.org"),
-            ))
-            .with_children(|parent| {
-                parent.spawn(TextBundle::from_section(
-                    "Made with Bevy",
-                    TextStyle {
-                        font_size: 15.0,
-                        color: Color::rgb(0.9, 0.9, 0.9),
-                        ..default()
-                    },
-                ));
-                parent.spawn(ImageBundle {
-                    image: textures.bevy.clone().into(),
-                    style: Style {
-                        width: Val::Px(32.),
-                        ..default()
-                    },
-                    ..default()
-                });
-            });
-    });
 }
 
 #[derive(Component)]
-struct ChangeState(GameState);
+struct ChangeState(crate::states::States);
 
 #[derive(Component)]
 struct OpenLink(&'static str);
 
 fn click_play_button(
-    mut next_state: ResMut<NextState<GameState>>,
+    mut next_state: ResMut<NextState<crate::states::States>>,
     mut interaction_query: Query<
         (
             &Interaction,

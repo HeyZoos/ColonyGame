@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use crate::agent::Bush;
 use crate::reservations::Reservable;
+use crate::states::States::Play;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
@@ -29,9 +30,9 @@ pub struct WorldgenPlugin;
 impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TilemapPlugin);
-        app.add_systems(Startup, startup);
-        app.add_systems(PostStartup, resource_layer_startup_system);
-        app.add_systems(Update, update_tile_transform_system);
+        app.add_systems(OnEnter(Play), startup);
+        app.add_systems(OnEnter(Play), resource_layer_startup_system.after(startup));
+        app.add_systems(Update, update_tile_transform_system.run_if(in_state(Play)));
     }
 }
 

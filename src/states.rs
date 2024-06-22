@@ -11,6 +11,8 @@ impl Plugin for StatesPlugin {
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq, States)]
 pub enum States {
     #[default]
-    Load,
+    LoadMenu,
+    Menu,
+    _LoadPlay,
     Play,
 }

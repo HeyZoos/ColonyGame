@@ -5,6 +5,7 @@ use crate::ext::Vec2Ext;
 use crate::reservations::{
     Reservable, Reservation, ReservationRequest, ReservationRequestBuilder, Reserved,
 };
+use crate::states::States::Play;
 use crate::villager::{find_path, Movement};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
@@ -29,10 +30,11 @@ impl Plugin for AgentPlugin {
             (
                 (move_to_nearest_system::<Bush>, gather_action_system).in_set(BigBrainSet::Actions),
                 (work_need_scorer_system,).in_set(BigBrainSet::Scorers),
-            ),
+            )
+                .run_if(in_state(Play)),
         );
 
-        app.add_systems(Update, update_z_system);
+        app.add_systems(Update, update_z_system.run_if(in_state(Play)));
     }
 }
 
