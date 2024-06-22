@@ -1,6 +1,6 @@
 use crate::assets::UiAssets;
 use bevy::prelude::*;
-use bevy_nine_slice_ui::{NineSliceUiPlugin, NineSliceUiTexture};
+use bevy_nine_slice_ui::{NineSliceUiMaterialBundle, NineSliceUiPlugin, NineSliceUiTexture};
 use bevy_pancam::PanCam;
 
 pub struct MenuPlugin;
@@ -11,24 +11,9 @@ impl Plugin for MenuPlugin {
             .add_systems(OnEnter(crate::states::States::Menu), setup_menu)
             .add_systems(
                 Update,
-                click_play_button.run_if(in_state(crate::states::States::Menu)),
+                button_system.run_if(in_state(crate::states::States::Menu)),
             )
             .add_systems(OnExit(crate::states::States::Menu), cleanup_menu);
-    }
-}
-
-#[derive(Component)]
-struct ButtonColors {
-    normal: Color,
-    hovered: Color,
-}
-
-impl Default for ButtonColors {
-    fn default() -> Self {
-        ButtonColors {
-            normal: Color::rgb(0.15, 0.15, 0.15),
-            hovered: Color::rgb(0.25, 0.25, 0.25),
-        }
     }
 }
 
@@ -103,72 +88,133 @@ fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
 
     let button_id = commands
         .spawn(ButtonBundle {
+            background_color: BackgroundColor(Color::NONE),
             style: Style {
-                width: Val::Px(150.),
-                height: Val::Px(50.),
-                display: Display::Flex,
+                width: Val::Px(400.0),
+                height: Val::Px(120.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..default()
             },
             ..default()
         })
-        .insert(NineSliceUiTexture::from_slice(
-            ui_assets.buttons_image.clone(),
-            Rect::new(0., 0., 48., 48.),
-        ))
+        .with_children(|parent| {
+            parent
+                .spawn(NineSliceUiMaterialBundle {
+                    style: Style {
+                        width: Val::Percent(100.),
+                        height: Val::Percent(100.),
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        display: Display::Flex,
+                        ..default()
+                    },
+                    nine_slice_texture: NineSliceUiTexture::from_slice(
+                        ui_assets.buttons_image.clone(),
+                        Rect::new(0., 0., 48., 48.),
+                    ),
+                    ..default()
+                })
+                .with_children(|children| {
+                    children.spawn(TextBundle::from_section(
+                        "Play",
+                        TextStyle {
+                            font_size: 48.0,
+                            color: Color::WHITE,
+                            ..default()
+                        },
+                    ));
+                });
+        })
+        .insert(bevy::prelude::Name::new("Play Button"))
         .id();
 
-    commands.entity(middle_id).push_children(&[button_id]);
+    let play_button_id = commands
+        .spawn(ButtonBundle {
+            background_color: BackgroundColor(Color::NONE),
+            style: Style {
+                width: Val::Px(400.0),
+                height: Val::Px(120.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn(NineSliceUiMaterialBundle {
+                    style: Style {
+                        width: Val::Percent(100.),
+                        height: Val::Percent(100.),
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        display: Display::Flex,
+                        ..default()
+                    },
+                    nine_slice_texture: NineSliceUiTexture::from_slice(
+                        ui_assets.buttons_image.clone(),
+                        Rect::new(0., 0., 48., 48.),
+                    ),
+                    ..default()
+                })
+                .with_children(|children| {
+                    children.spawn(TextBundle::from_section(
+                        "Exit",
+                        TextStyle {
+                            font_size: 48.0,
+                            color: Color::WHITE,
+                            ..default()
+                        },
+                    ));
+                });
+        })
+        .insert(bevy::prelude::Name::new("Exit Button"))
+        .id();
+
+    commands
+        .entity(middle_id)
+        .push_children(&[button_id, play_button_id]);
 
     let right_id = commands.spawn(right).id();
     let _root_id = commands
-        .spawn((Menu, Name::new("Menu"), root))
+        .spawn((Menu, bevy::prelude::Name::new("Menu"), root))
         .push_children(&[left_id, middle_id, right_id]);
-}
-
-#[derive(Component)]
-struct ChangeState(crate::states::States);
-
-#[derive(Component)]
-struct OpenLink(&'static str);
-
-fn click_play_button(
-    mut next_state: ResMut<NextState<crate::states::States>>,
-    mut interaction_query: Query<
-        (
-            &Interaction,
-            &mut BackgroundColor,
-            &ButtonColors,
-            Option<&ChangeState>,
-            Option<&OpenLink>,
-        ),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut color, button_colors, change_state, open_link) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                if let Some(state) = change_state {
-                    next_state.set(state.0.clone());
-                } else if let Some(link) = open_link {
-                    if let Err(error) = webbrowser::open(link.0) {
-                        warn!("Failed to open link {error:?}");
-                    }
-                }
-            }
-            Interaction::Hovered => {
-                *color = button_colors.hovered.into();
-            }
-            Interaction::None => {
-                *color = button_colors.normal.into();
-            }
-        }
-    }
 }
 
 fn cleanup_menu(mut commands: Commands, menu: Query<Entity, With<Menu>>) {
     for entity in menu.iter() {
         commands.entity(entity).despawn_recursive();
+    }
+}
+
+fn button_system(
+    ui_assets: Res<UiAssets>,
+    mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
+    mut nine_slice_query: Query<&mut NineSliceUiTexture>,
+) {
+    for (interaction, children) in &mut interaction_query {
+        let child = children.first().unwrap();
+        let mut nine_slice = nine_slice_query.get_mut(*child).unwrap();
+        match *interaction {
+            Interaction::Pressed => {
+                *nine_slice = NineSliceUiTexture::from_slice(
+                    ui_assets.buttons_image.clone(),
+                    Rect::new(48., 48., 96., 96.),
+                );
+            }
+            Interaction::Hovered => {
+                *nine_slice = NineSliceUiTexture::from_slice(
+                    ui_assets.buttons_image.clone(),
+                    Rect::new(0., 144., 48., 192.),
+                );
+            }
+            Interaction::None => {
+                *nine_slice = NineSliceUiTexture::from_slice(
+                    ui_assets.buttons_image.clone(),
+                    Rect::new(0., 96., 48., 144.),
+                );
+            }
+        }
     }
 }
