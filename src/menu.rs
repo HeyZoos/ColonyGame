@@ -60,8 +60,9 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
             flex_grow: 1.0,
             flex_shrink: 0.0,
             flex_basis: Val::Px(0.0),
-            align_items: AlignItems::End,
-            justify_content: JustifyContent::Start,
+            align_items: AlignItems::Start,
+            justify_content: JustifyContent::End,
+            padding: UiRect::all(Val::Percent(2.0)),
             ..default()
         },
         // background_color: BackgroundColor(Color::rgb(1.0, 0.0, 0.0)),
@@ -77,7 +78,24 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
     right.style.justify_content = JustifyContent::End;
     right.style.padding = UiRect::all(Val::Percent(2.0));
 
-    let left_id = commands.spawn(left).id();
+    let left_id = commands
+        .spawn(left)
+        .with_children(|children| {
+            children.spawn(TextBundle::from_section(
+                format!(
+                    "Plowpaw ({}) ({})",
+                    env!("VERGEN_GIT_BRANCH"),
+                    env!("VERGEN_GIT_SHA")
+                ),
+                TextStyle {
+                    font_size: 12.0,
+                    color: Color::WHITE,
+                    ..default()
+                },
+            ));
+        })
+        .id();
+
     let middle_id = commands.spawn(middle).id();
     let right_id = commands.spawn(right).id();
     let root_id = commands

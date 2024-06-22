@@ -92,3 +92,4 @@ iyes_progress = "0.11.0"
 
 [build-dependencies]
 embed-resource = "1"
+vergen-git2 = "1.0.0-beta.2"
