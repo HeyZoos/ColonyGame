@@ -42,26 +42,55 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
         })
         .insert(PanCam::default());
 
+    // This is the root flex container, from here we'll divide it into thirds
     let root = NodeBundle {
         style: Style {
-            flex_direction: FlexDirection::Column,
+            flex_direction: FlexDirection::Row,
             height: Val::Percent(100.0),
             width: Val::Percent(100.0),
             ..default()
         },
+        // background_color: BackgroundColor(Color::rgb(1.0, 1.0, 1.0)),
         ..default()
     };
 
-    commands.spawn((Menu, root)).with_children(|children| {
+    let left = NodeBundle {
+        style: Style {
+            flex_direction: FlexDirection::Column,
+            flex_grow: 1.0,
+            flex_shrink: 0.0,
+            flex_basis: Val::Px(0.0),
+            align_items: AlignItems::End,
+            justify_content: JustifyContent::Start,
+            ..default()
+        },
+        // background_color: BackgroundColor(Color::rgb(1.0, 0.0, 0.0)),
+        ..default()
+    };
+
+    let mut middle = left.clone();
+    // middle.background_color = BackgroundColor(Color::rgb(0.0, 1.0, 0.0));
+
+    let mut right = left.clone();
+    // right.background_color = BackgroundColor(Color::rgb(0.0, 0.0, 1.0));
+    right.style.align_items = AlignItems::End;
+    right.style.justify_content = JustifyContent::End;
+    right.style.padding = UiRect::all(Val::Percent(2.0));
+
+    let left_id = commands.spawn(left).id();
+    let middle_id = commands.spawn(middle).id();
+    let right_id = commands.spawn(right).id();
+    let root_id = commands
+        .spawn((Menu, Name::new("Menu"), root))
+        .push_children(&[left_id, middle_id, right_id]);
+
+    commands.entity(right_id).with_children(|children| {
         children
             .spawn((
                 ButtonBundle {
                     style: Style {
-                        width: Val::Px(170.0),
-                        height: Val::Px(50.0),
                         justify_content: JustifyContent::SpaceAround,
                         align_items: AlignItems::Center,
-                        padding: UiRect::all(Val::Px(5.)),
                         ..Default::default()
                     },
                     background_color: Color::NONE.into(),
