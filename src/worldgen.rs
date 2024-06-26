@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use bevy::math::vec2;
 
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
@@ -33,12 +34,10 @@ impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TilemapPlugin).add_systems(
             Update,
-            (
-                generate_layer.track_progress(),
-            )
-                .run_if(in_state(LoadPlay)),
+            (generate_layer.track_progress(),).run_if(in_state(LoadPlay)),
         );
         app.add_systems(Update, update_tile_transform_system.run_if(in_state(Play)));
+        app.add_systems(OnEnter(Play), center_camera_in_world);
     }
 }
 
@@ -318,4 +317,20 @@ fn update_tile_transform_system(mut q: Query<(&mut Transform, &TilePos)>) {
             .center_in_world(&TILEMAP_TILE_SIZE.into(), &TILEMAP_TYPE)
             .extend(0.0);
     }
+}
+
+fn center_camera_in_world(mut camera: Query<&mut Transform, With<Camera>>) {
+    let start = std::time::Instant::now();
+
+    let mut transform = camera.single_mut();
+
+    let center = vec2(
+        TILEMAP_SIZE.x as f32 * TILEMAP_TILE_SIZE.x,
+        TILEMAP_SIZE.y as f32 * TILEMAP_TILE_SIZE.y
+    ) / 2.0;
+
+    transform.translation.x = center.x;
+    transform.translation.y = center.y;
+
+    info!("returned in {}ms", start.elapsed().as_millis());
 }
