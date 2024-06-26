@@ -1,7 +1,8 @@
-use crate::assets::UiAssets;
 use bevy::prelude::*;
 use bevy_nine_slice_ui::{NineSliceUiMaterialBundle, NineSliceUiPlugin, NineSliceUiTexture};
 use bevy_pancam::PanCam;
+
+use crate::assets::UiAssets;
 
 pub struct MenuPlugin;
 
@@ -11,7 +12,8 @@ impl Plugin for MenuPlugin {
             .add_systems(OnEnter(crate::states::States::Menu), setup_menu)
             .add_systems(
                 Update,
-                button_system.run_if(in_state(crate::states::States::Menu)),
+                (button_style_system, play_button_clicked_system)
+                    .run_if(in_state(crate::states::States::Menu)),
             )
             .add_systems(OnExit(crate::states::States::Menu), cleanup_menu);
     }
@@ -86,7 +88,7 @@ fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
 
     let middle_id = commands.spawn(middle).id();
 
-    let button_id = commands
+    let play_button_id = commands
         .spawn(ButtonBundle {
             background_color: BackgroundColor(Color::NONE),
             style: Style {
@@ -127,9 +129,10 @@ fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
                 });
         })
         .insert(bevy::prelude::Name::new("Play Button"))
+        .insert(PlayButton)
         .id();
 
-    let play_button_id = commands
+    let exit_button_id = commands
         .spawn(ButtonBundle {
             background_color: BackgroundColor(Color::NONE),
             style: Style {
@@ -174,7 +177,7 @@ fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
 
     commands
         .entity(middle_id)
-        .push_children(&[button_id, play_button_id]);
+        .push_children(&[play_button_id, exit_button_id]);
 
     let right_id = commands.spawn(right).id();
     let _root_id = commands
@@ -188,7 +191,7 @@ fn cleanup_menu(mut commands: Commands, menu: Query<Entity, With<Menu>>) {
     }
 }
 
-fn button_system(
+fn button_style_system(
     ui_assets: Res<UiAssets>,
     mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
     mut nine_slice_query: Query<&mut NineSliceUiTexture>,
@@ -215,6 +218,23 @@ fn button_system(
                     Rect::new(0., 96., 48., 144.),
                 );
             }
+        }
+    }
+}
+
+#[derive(Component)]
+struct PlayButton;
+
+fn play_button_clicked_system(
+    interactions: Query<&Interaction, (Changed<Interaction>, With<PlayButton>)>,
+) {
+    for interaction in interactions.iter() {
+        match interaction {
+            Interaction::Pressed => {
+                todo!()
+            }
+            Interaction::Hovered => {}
+            Interaction::None => {}
         }
     }
 }
