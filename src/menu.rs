@@ -15,7 +15,9 @@ impl Plugin for MenuPlugin {
                 (button_style_system, play_button_clicked_system)
                     .run_if(in_state(crate::states::States::Menu)),
             )
-            .add_systems(OnExit(crate::states::States::Menu), cleanup_menu);
+            .add_systems(OnExit(crate::states::States::Menu), cleanup_menu)
+            .add_systems(OnEnter(crate::states::States::LoadPlay), setup_load_play_ui)
+            .add_systems(OnExit(crate::states::States::LoadPlay), cleanup_load_play_ui);
     }
 }
 
@@ -38,7 +40,7 @@ fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
             width: Val::Percent(100.0),
             ..default()
         },
-        // background_color: BackgroundColor(Color::rgb(1.0, 1.0, 1.0)),
+        background_color: BackgroundColor(Color::rgb_u8(253, 246, 227)), // Solarized Base3
         ..default()
     };
 
@@ -189,6 +191,35 @@ fn cleanup_menu(mut commands: Commands, menu: Query<Entity, With<Menu>>) {
     for entity in menu.iter() {
         commands.entity(entity).despawn_recursive();
     }
+}
+
+#[derive(Component)]
+struct LoadMenu;
+
+fn setup_load_play_ui(mut commands: Commands) {
+    let start = std::time::Instant::now();
+
+    commands.spawn((NodeBundle {
+        style: Style {
+            height: Val::Percent(100.0),
+            width: Val::Percent(100.0),
+            ..default()
+        },
+        background_color: BackgroundColor(Color::rgb_u8(238, 232, 213)), // Solarized Base2
+        ..default()
+    }, LoadMenu));
+
+    info!("returned in {}ms", start.elapsed().as_millis());
+}
+
+fn cleanup_load_play_ui(mut commands: Commands, menu: Query<Entity, With<LoadMenu>>) {
+    let start = std::time::Instant::now();
+
+    for entity in menu.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    info!("returned in {}ms", start.elapsed().as_millis());
 }
 
 fn button_style_system(

@@ -1,17 +1,19 @@
 use std::path::PathBuf;
 
-use crate::agent::Bush;
-use crate::reservations::Reservable;
-use crate::states::States::Play;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
+use iyes_progress::{dummy_system_wait_frames, dummy_system_wait_millis, Progress, ProgressSystem};
 use noise::{NoiseFn, Perlin};
 use rand::prelude::SliceRandom;
 use rand::{thread_rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
+
+use crate::agent::Bush;
+use crate::reservations::Reservable;
+use crate::states::States::{LoadPlay, Play};
 
 pub const TILEMAP_SIZE: TilemapSize = TilemapSize::new(256, 256);
 pub const TILEMAP_TILE_SIZE: TilemapTileSize = TilemapTileSize::new(16.0, 16.0);
@@ -29,9 +31,13 @@ pub struct WorldgenPlugin;
 
 impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(TilemapPlugin);
-        app.add_systems(OnEnter(Play), startup);
-        app.add_systems(OnEnter(Play), resource_layer_startup_system.after(startup));
+        app.add_plugins(TilemapPlugin).add_systems(
+            Update,
+            (
+                generate_layer.track_progress(),
+            )
+                .run_if(in_state(LoadPlay)),
+        );
         app.add_systems(Update, update_tile_transform_system.run_if(in_state(Play)));
     }
 }
@@ -42,27 +48,20 @@ pub struct World {
     pub patterns: OverlappingPatterns<u16>,
 }
 
-fn startup(mut commands: Commands, assets: Res<AssetServer>) {
+fn generate_layer(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    mut next_layer_id: Local<u32>,
+) -> Progress {
     // Load hand-crafted pattern made in the Tiled editor
     let mut tiled_loader = tiled::Loader::new();
 
     // Note that this tilemap needs to be a square
-    let tiled_map = match tiled_loader.load_tmx_map("assets/patterns.tmx") {
-        Ok(map) => map,
-        Err(e) => {
-            error!("Failed to load Tiled map: {}", e);
-            return;
-        }
-    };
+    let tiled_map = tiled_loader.load_tmx_map("assets/patterns.tmx").unwrap();
 
-    // Create an empty entity to organize tilemaps
-    let environment = commands
-        .spawn((Name::new("Environment"), SpatialBundle::default()))
-        .id();
-
-    // For each tilemap layer
-    for layer_idx in (0..tiled_map.layers().len()).rev() {
-        let layer = tiled_map.layers().nth(layer_idx).unwrap();
+    if *next_layer_id < tiled_map.layers().len() as u32 {
+        // For each tilemap layer
+        let layer = tiled_map.layers().nth(*next_layer_id as usize).unwrap();
 
         // Convert the layer to a tile layer
         let tile_layer = layer.as_tile_layer().unwrap();
@@ -125,16 +124,17 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
                     storage: tile_storage,
                     texture: TilemapTexture::Single(texture_handle),
                     tile_size: TILEMAP_TILE_SIZE,
-                    transform: Transform::from_xyz(0.0, 0.0, layer_idx as f32),
+                    transform: Transform::from_xyz(0.0, 0.0, *next_layer_id as f32),
                     ..Default::default()
                 },
             ))
             .push_children(&children);
 
-        commands
-            .entity(environment)
-            .push_children(&[tilemap_entity]);
+        *next_layer_id += 1;
     }
+
+    let result = tiled_map.layers().len() as u32;
+    dbg!((*next_layer_id == result).into())
 }
 
 // Populate Tilemap Function
