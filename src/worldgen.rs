@@ -14,7 +14,7 @@ use wfc::Wave;
 
 use crate::agent::Bush;
 use crate::reservations::Reservable;
-use crate::states::States::{LoadPlay, Play};
+use crate::states::States::{LoadPlay, Play, Worldgen};
 
 pub const TILEMAP_SIZE: TilemapSize = TilemapSize::new(256, 256);
 pub const TILEMAP_TILE_SIZE: TilemapTileSize = TilemapTileSize::new(16.0, 16.0);
@@ -34,8 +34,14 @@ impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TilemapPlugin).add_systems(
             Update,
-            (generate_layer.track_progress(),).run_if(in_state(LoadPlay)),
+            (generate_layer.track_progress(),).run_if(in_state(Worldgen)),
         );
+
+        app.add_systems(
+            Update,
+            (resource_layer_startup_system.track_progress(),).run_if(in_state(LoadPlay)),
+        );
+
         app.add_systems(Update, update_tile_transform_system.run_if(in_state(Play)));
         app.add_systems(OnEnter(Play), center_camera_in_world);
     }
@@ -233,7 +239,7 @@ fn resource_layer_startup_system(
     mut commands: Commands,
     world: Res<World>,
     assets: Res<AssetServer>,
-) {
+) -> Progress {
     let perlin = Perlin::new(3);
 
     // Define noise scale for resource placement
@@ -308,6 +314,9 @@ fn resource_layer_startup_system(
             transform: Transform::from_xyz(0.0, 0.0, 5.0),
             ..Default::default()
         });
+
+    // bool -> Progress
+    true.into()
 }
 
 /// Maintain the `Transform` component on tiles so that they can be used in spatial queries

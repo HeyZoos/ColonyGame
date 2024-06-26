@@ -16,7 +16,7 @@ impl Plugin for MenuPlugin {
                     .run_if(in_state(crate::states::States::Menu)),
             )
             .add_systems(OnExit(crate::states::States::Menu), cleanup_menu)
-            .add_systems(OnEnter(crate::states::States::LoadPlay), setup_load_play_ui)
+            .add_systems(OnEnter(crate::states::States::Worldgen), setup_load_play_ui)
             .add_systems(OnExit(crate::states::States::LoadPlay), cleanup_load_play_ui);
     }
 }
@@ -262,7 +262,7 @@ fn play_button_clicked_system(
 ) {
     for interaction in interactions.iter() {
         match interaction {
-            Interaction::Pressed => next_state.set(crate::states::States::LoadPlay),
+            Interaction::Pressed => next_state.set(crate::states::States::Worldgen),
             Interaction::Hovered => {}
             Interaction::None => {}
         }

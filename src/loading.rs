@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use iyes_progress::{ProgressCounter, ProgressPlugin};
 
-use crate::states::States::{LoadMenu, LoadPlay, Menu, Play};
+use crate::states::States::{LoadMenu, LoadPlay, Menu, Play, Worldgen};
 
 pub struct LoadingPlugin;
 
@@ -12,6 +12,7 @@ impl Plugin for LoadingPlugin {
         app.add_plugins((
             ProgressPlugin::new(LoadMenu).continue_to(Menu),
             ProgressPlugin::new(LoadPlay).continue_to(Play),
+            ProgressPlugin::new(Worldgen).continue_to(LoadPlay),
             FrameTimeDiagnosticsPlugin,
         ))
         .add_systems(
@@ -20,6 +21,13 @@ impl Plugin for LoadingPlugin {
                 .chain()
                 .run_if(in_state(LoadMenu))
                 .after(LoadingStateSet(LoadMenu)),
+        )
+        .add_systems(
+            Update,
+            (print_progress,)
+                .chain()
+                .run_if(in_state(Worldgen))
+                .after(LoadingStateSet(Worldgen)),
         )
         .add_systems(
             Update,

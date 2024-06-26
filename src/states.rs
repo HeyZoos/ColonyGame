@@ -13,6 +13,7 @@ pub enum States {
     #[default]
     LoadMenu,
     Menu,
+    Worldgen,
     LoadPlay,
     Play,
 }
