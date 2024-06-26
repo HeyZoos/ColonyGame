@@ -227,12 +227,11 @@ struct PlayButton;
 
 fn play_button_clicked_system(
     interactions: Query<&Interaction, (Changed<Interaction>, With<PlayButton>)>,
+    mut next_state: ResMut<NextState<crate::states::States>>,
 ) {
     for interaction in interactions.iter() {
         match interaction {
-            Interaction::Pressed => {
-                todo!()
-            }
+            Interaction::Pressed => next_state.set(crate::states::States::LoadPlay),
             Interaction::Hovered => {}
             Interaction::None => {}
         }

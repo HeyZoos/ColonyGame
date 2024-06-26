@@ -13,6 +13,6 @@ pub enum States {
     #[default]
     LoadMenu,
     Menu,
-    _LoadPlay,
+    LoadPlay,
     Play,
 }

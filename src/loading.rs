@@ -1,8 +1,9 @@
-use crate::states::States::{LoadMenu, Menu};
 use bevy::diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use iyes_progress::{ProgressCounter, ProgressPlugin};
+
+use crate::states::States::{LoadMenu, LoadPlay, Menu, Play};
 
 pub struct LoadingPlugin;
 
@@ -10,6 +11,7 @@ impl Plugin for LoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             ProgressPlugin::new(LoadMenu).continue_to(Menu),
+            ProgressPlugin::new(LoadPlay).continue_to(Play),
             FrameTimeDiagnosticsPlugin,
         ))
         .add_systems(
