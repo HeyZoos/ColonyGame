@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use bevy_kira_audio::prelude::*;
 
 use crate::states::States::LoadMenu;
 
@@ -9,10 +10,17 @@ impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
             LoadingState::new(LoadMenu)
+                .load_collection::<AudioAssets>()
                 .load_collection::<CharacterAssets>()
                 .load_collection::<UiAssets>(),
         );
     }
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct AudioAssets {
+    #[asset(path = "audio/hover.wav")]
+    pub hover: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection, Resource)]
