@@ -1,10 +1,10 @@
-use std::path::PathBuf;
 use bevy::math::vec2;
+use std::path::PathBuf;
 
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use grid_2d::{Grid, Size};
-use iyes_progress::{dummy_system_wait_frames, dummy_system_wait_millis, Progress, ProgressSystem};
+use iyes_progress::{Progress, ProgressSystem};
 use noise::{NoiseFn, Perlin};
 use rand::prelude::SliceRandom;
 use rand::{thread_rng, SeedableRng};
@@ -13,6 +13,7 @@ use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
 use crate::agent::Bush;
+use crate::assets::UiAssets;
 use crate::reservations::Reservable;
 use crate::states::States::{LoadPlay, Play, Worldgen};
 
@@ -43,7 +44,19 @@ impl Plugin for WorldgenPlugin {
         );
 
         app.add_systems(Update, update_tile_transform_system.run_if(in_state(Play)));
+
+        app.add_systems(
+            Update,
+            spawn_x_tile_on_reservable_added.run_if(in_state(Play)),
+        );
+
+        app.add_systems(
+            Update,
+            remove_x_tile_on_reservation_destroyed.run_if(in_state(Play)),
+        );
+
         app.add_systems(OnEnter(Play), center_camera_in_world);
+        app.add_systems(OnEnter(Play), mark_a_bush_as_reserved);
     }
 }
 
@@ -290,7 +303,6 @@ fn resource_layer_startup_system(
                     if *resource_id == BUSH_TILE_ID {
                         resource_tile.insert(Name::new("Bush"));
                         resource_tile.insert(Bush);
-                        resource_tile.insert(Reservable);
                         resource_tile.insert(Transform::default());
                     }
 
@@ -313,10 +325,71 @@ fn resource_layer_startup_system(
             tile_size: TILEMAP_TILE_SIZE,
             transform: Transform::from_xyz(0.0, 0.0, 5.0),
             ..Default::default()
-        });
+        })
+        .insert(Name::new("Resources"));
 
     // bool -> Progress
     true.into()
+}
+
+fn mark_a_bush_as_reserved(
+    mut commands: Commands,
+    mut tilemaps: Query<(&Name, &mut TileStorage)>,
+    ui_assets: Res<UiAssets>,
+) {
+    // Create a tilemap to hold reservations
+    commands.spawn((
+        Name::new("Reservations"),
+        TilemapBundle {
+            grid_size: TILEMAP_TILE_SIZE.into(),
+            map_type: TILEMAP_TYPE,
+            size: TILEMAP_SIZE,
+            storage: TileStorage::empty(TILEMAP_SIZE),
+            texture: TilemapTexture::Single(ui_assets.xs_image.clone()),
+            tile_size: TILEMAP_TILE_SIZE,
+            transform: Transform::from_xyz(0.0, 0.0, 6.0),
+            ..default()
+        },
+    ));
+
+    // Mark all resources as reservable
+    for (name, mut tilemap) in tilemaps.iter_mut() {
+        if name.as_str() == "Resources" {
+            for tile in tilemap.iter() {
+                if let Some(tile) = tile {
+                    commands.entity(*tile).insert(Reservable);
+                }
+            }
+        }
+    }
+}
+
+fn spawn_x_tile_on_reservable_added(
+    mut commands: Commands,
+    changed: Query<(Entity, &TilePos), Added<Reservable>>,
+    tilemaps: Query<(Entity, &Name, &TileStorage)>,
+) {
+    // Find the reservations tilemap
+    let reservations_tilemap = tilemaps
+        .iter()
+        .find(|(_, name, _)| name.as_str() == "Reservations")
+        .unwrap();
+
+    // Add xs for all the newly reserved tiles
+    for (entity, tilepos) in changed.iter() {
+        commands.spawn(TileBundle {
+            position: *tilepos,
+            texture_index: TileTextureIndex(11),
+            tilemap_id: TilemapId(reservations_tilemap.0),
+            ..Default::default()
+        });
+    }
+}
+
+fn remove_x_tile_on_reservation_destroyed(
+
+) {
+
 }
 
 /// Maintain the `Transform` component on tiles so that they can be used in spatial queries
@@ -335,7 +408,7 @@ fn center_camera_in_world(mut camera: Query<&mut Transform, With<Camera>>) {
 
     let center = vec2(
         TILEMAP_SIZE.x as f32 * TILEMAP_TILE_SIZE.x,
-        TILEMAP_SIZE.y as f32 * TILEMAP_TILE_SIZE.y
+        TILEMAP_SIZE.y as f32 * TILEMAP_TILE_SIZE.y,
     ) / 2.0;
 
     transform.translation.x = center.x;
