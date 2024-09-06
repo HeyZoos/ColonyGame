@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_nine_slice_ui::{NineSliceUiMaterialBundle, NineSliceUiPlugin, NineSliceUiTexture};
-use bevy_pancam::PanCam;
+use bevy_pancam::{DirectionKeys, PanCam};
 
 use crate::assets::UiAssets;
 
@@ -24,16 +24,20 @@ impl Plugin for MenuPlugin {
 struct Menu;
 
 fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
-    commands
-        .spawn(Camera2dBundle {
-            // projection: OrthographicProjection {
-            //     scaling_mode: WindowSize(ENTITY_SIZE_IN_PIXELS),
-            //     ..default()
-            // },
-            transform: Transform::from_xyz(0.0, 0.0, 5.0),
-            ..default()
-        })
-        .insert(PanCam::default());
+    commands.spawn(Camera2dBundle::default()).insert(PanCam {
+        grab_buttons: vec![MouseButton::Middle], // which buttons should drag the camera
+        move_keys: DirectionKeys {
+            // the keyboard buttons used to move the camera
+            up: vec![KeyCode::KeyW], // initalize the struct like this or use the provided methods for
+            down: vec![KeyCode::KeyS], // common key combinations
+            left: vec![KeyCode::KeyA],
+            right: vec![KeyCode::KeyD],
+        },
+        speed: 400.,          // the speed for the keyboard movement
+        enabled: true,        // when false, controls are disabled. See toggle example.
+        zoom_to_cursor: true, // whether to zoom towards the mouse or the center of the screen
+        ..default()
+    });
 
     // This is the root flex container, from here we'll divide it into thirds
     let root = NodeBundle {
