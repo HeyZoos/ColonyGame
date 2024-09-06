@@ -19,24 +19,17 @@ pub struct VillagerPlugin;
 
 impl Plugin for VillagerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(Play), setup_villagers).add_systems(
-            Update,
-            (animate_sprite, movement_system).run_if(in_state(Play)),
-        );
+        app.add_systems(OnEnter(Play), setup_villagers)
+            .add_systems(Update, (animate_sprite, movement_system).run_if(in_state(Play)));
     }
 }
 
-pub fn find_path(
-    world: &crate::worldgen::World,
-    start: TilePos,
-    goal: TilePos,
-) -> Option<Vec<TilePos>> {
+pub fn find_path(world: &crate::worldgen::World, start: TilePos, goal: TilePos) -> Option<Vec<TilePos>> {
     astar(
         &start,
         |&current| {
             let mut next = vec![];
-            let neighbors =
-                Neighbors::get_square_neighboring_positions(&current, &TILEMAP_SIZE, false);
+            let neighbors = Neighbors::get_square_neighboring_positions(&current, &TILEMAP_SIZE, false);
 
             for &neighbor in neighbors.iter() {
                 let cell = world.wave.grid().get(neighbor.to_coord());
@@ -78,11 +71,7 @@ fn setup_villagers(mut cmds: Commands, images: Res<CharacterAssets>) {
                     layout: images.layout.clone(),
                     index: animation_indices.first,
                 },
-                transform: Transform::from_xyz(
-                    21.0 * 16.0,
-                    (25.0 * 16.0) + (i as f32 * 1.0 * 16.0),
-                    10.0,
-                ),
+                transform: Transform::from_xyz(21.0 * 16.0, (25.0 * 16.0) + (i as f32 * 1.0 * 16.0), 10.0),
                 ..Default::default()
             },
             animation_indices,
@@ -108,10 +97,7 @@ pub struct AnimationIndices {
 #[derive(Component)]
 struct AnimationTimer(Timer);
 
-fn animate_sprite(
-    time: Res<Time>,
-    mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut TextureAtlas)>,
-) {
+fn animate_sprite(time: Res<Time>, mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut TextureAtlas)>) {
     for (indices, mut timer, mut atlas) in &mut query {
         timer.0.tick(time.delta());
         if timer.0.just_finished() {

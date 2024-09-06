@@ -6,6 +6,7 @@ mod assets;
 pub mod audio;
 pub mod blackboard;
 pub mod ext;
+mod input;
 mod inspector;
 pub mod loading;
 pub mod menu;
@@ -22,6 +23,7 @@ use crate::villager::VillagerPlugin;
 use crate::worldgen::WorldgenPlugin;
 
 use crate::agent::AgentPlugin;
+use crate::input::InputPlugin;
 use crate::reservations::ReservationsPlugin;
 use bevy::app::App;
 use bevy::prelude::*;
@@ -54,9 +56,11 @@ impl Plugin for GamePlugin {
             WorldgenPlugin,
         ));
 
-        app.add_plugins(
-            RapierPhysicsPlugin::<NoUserData>::default().with_length_unit(ENTITY_SIZE_IN_PIXELS),
-        )
-        .add_plugins(RapierDebugRenderPlugin::default());
+        // Physics Plugins
+        app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default().with_length_unit(ENTITY_SIZE_IN_PIXELS));
+        app.add_plugins(RapierDebugRenderPlugin::default());
+
+        // Player Input Plugins
+        app.add_plugins(InputPlugin);
     }
 }

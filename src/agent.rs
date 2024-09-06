@@ -3,8 +3,7 @@ use crate::animation::GatheringTag;
 use crate::blackboard::Blackboard;
 use crate::ext::Vec2Ext;
 use crate::reservations::{
-    RemoveReservation, Reservable, Reservation, ReservationRequest, ReservationRequestBuilder,
-    Reserved,
+    RemoveReservation, Reservable, Reservation, ReservationRequest, ReservationRequestBuilder, Reserved,
 };
 use crate::states::States::Play;
 use crate::villager::{find_path, Movement};
@@ -185,12 +184,7 @@ pub fn gather_action_system(
     time: Res<Time>,
     mut commands: Commands,
     mut agents: Query<
-        (
-            &mut Blackboard,
-            &mut Transform,
-            &mut Movement,
-            &mut GatheringTimer,
-        ),
+        (&mut Blackboard, &mut Transform, &mut Movement, &mut GatheringTimer),
         (With<HasThinker>, Without<Bush>),
     >,
     mut action_query: Query<(&Actor, &mut ActionState, &GatherAction, &ActionSpan)>,
@@ -223,8 +217,7 @@ pub fn gather_action_system(
                             let raw_entity_u64 = raw_entity_number.as_u64().unwrap();
                             let raw_entity_u32 = raw_entity_u64 as u32;
 
-                            let entity_option =
-                                commands.get_entity(Entity::from_raw(raw_entity_u32));
+                            let entity_option = commands.get_entity(Entity::from_raw(raw_entity_u32));
 
                             if let Some(entity) = entity_option {
                                 let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows

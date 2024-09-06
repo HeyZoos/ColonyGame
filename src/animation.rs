@@ -8,10 +8,7 @@ pub struct AnimationPlugin;
 impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, update_animation_indices_in_idle_state);
-        app.add_systems(
-            Update,
-            update_animation_indices_in_moving_state.after(movement_system),
-        );
+        app.add_systems(Update, update_animation_indices_in_moving_state.after(movement_system));
         app.add_systems(Update, update_animation_indices_in_gathering_state);
     }
 }
@@ -36,23 +33,21 @@ pub struct AnimationBundle {
 
 impl Default for AnimationBundle {
     fn default() -> Self {
-        let trigger_when_moving =
-            move |In(entity): In<Entity>, movements: Query<&Movement, Without<GatheringTag>>| {
-                if let Ok(movement) = movements.get(entity) {
-                    movement.target().is_some()
-                } else {
-                    false
-                }
-            };
+        let trigger_when_moving = move |In(entity): In<Entity>, movements: Query<&Movement, Without<GatheringTag>>| {
+            if let Ok(movement) = movements.get(entity) {
+                movement.target().is_some()
+            } else {
+                false
+            }
+        };
 
-        let trigger_when_idle =
-            move |In(entity): In<Entity>, movements: Query<&Movement, Without<GatheringTag>>| {
-                if let Ok(movement) = movements.get(entity) {
-                    movement.target().is_none()
-                } else {
-                    false
-                }
-            };
+        let trigger_when_idle = move |In(entity): In<Entity>, movements: Query<&Movement, Without<GatheringTag>>| {
+            if let Ok(movement) = movements.get(entity) {
+                movement.target().is_none()
+            } else {
+                false
+            }
+        };
 
         let state = StateMachine::default()
             .trans::<IdleState, _>(trigger_when_moving, MovingState)
@@ -62,24 +57,15 @@ impl Default for AnimationBundle {
             .trans::<MovingState, _>(trigger_when_idle, IdleState)
             .set_trans_logging(true);
 
-        Self {
-            idle: IdleState,
-            state,
-        }
+        Self { idle: IdleState, state }
     }
 }
 
-fn trigger_when_gathering(
-    In(entity): In<Entity>,
-    query: Query<&Movement, With<GatheringTag>>,
-) -> bool {
+fn trigger_when_gathering(In(entity): In<Entity>, query: Query<&Movement, With<GatheringTag>>) -> bool {
     query.contains(entity)
 }
 
-fn trigger_when_not_gathering(
-    In(entity): In<Entity>,
-    query: Query<&Movement, With<GatheringTag>>,
-) -> bool {
+fn trigger_when_not_gathering(In(entity): In<Entity>, query: Query<&Movement, With<GatheringTag>>) -> bool {
     !query.contains(entity)
 }
 

@@ -34,10 +34,8 @@ pub struct WorldgenPlugin;
 
 impl Plugin for WorldgenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(TilemapPlugin).add_systems(
-            Update,
-            (generate_layer.track_progress(),).run_if(in_state(Worldgen)),
-        );
+        app.add_plugins(TilemapPlugin)
+            .add_systems(Update, (generate_layer.track_progress(),).run_if(in_state(Worldgen)));
 
         app.add_systems(
             Update,
@@ -56,11 +54,7 @@ pub struct World {
     pub patterns: OverlappingPatterns<u16>,
 }
 
-fn generate_layer(
-    mut commands: Commands,
-    assets: Res<AssetServer>,
-    mut next_layer_id: Local<u32>,
-) -> Progress {
+fn generate_layer(mut commands: Commands, assets: Res<AssetServer>, mut next_layer_id: Local<u32>) -> Progress {
     // Load hand-crafted pattern made in the Tiled editor
     let mut tiled_loader = tiled::Loader::new();
 
@@ -233,16 +227,10 @@ fn wfc(patterns: OverlappingPatterns<u16>, seed: u64) -> Wave {
         &mut rng,
     );
 
-    runner
-        .collapse_retrying(wfc::retry::NumTimes(20), &mut rng)
-        .unwrap()
+    runner.collapse_retrying(wfc::retry::NumTimes(20), &mut rng).unwrap()
 }
 
-fn resource_layer_startup_system(
-    mut commands: Commands,
-    world: Res<World>,
-    assets: Res<AssetServer>,
-) -> Progress {
+fn resource_layer_startup_system(mut commands: Commands, world: Res<World>, assets: Res<AssetServer>) -> Progress {
     let perlin = Perlin::new(3);
 
     // Define noise scale for resource placement
@@ -258,11 +246,7 @@ fn resource_layer_startup_system(
 
     // Define resource types and their corresponding noise thresholds
     // Put the higher priority items higher
-    let resource_types = [
-        (STONE_TILE_ID, 0.7),
-        (FLOWER_TILE_ID, 0.5),
-        (BUSH_TILE_ID, 0.3),
-    ];
+    let resource_types = [(STONE_TILE_ID, 0.7), (FLOWER_TILE_ID, 0.5), (BUSH_TILE_ID, 0.3)];
 
     // Populate the resource tilemap
     for coord in world.wave.grid().coord_iter() {

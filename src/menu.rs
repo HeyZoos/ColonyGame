@@ -14,15 +14,11 @@ impl Plugin for MenuPlugin {
             .add_systems(OnEnter(crate::states::States::Menu), setup_menu)
             .add_systems(
                 Update,
-                (button_style_system, play_button_clicked_system)
-                    .run_if(in_state(crate::states::States::Menu)),
+                (button_style_system, play_button_clicked_system).run_if(in_state(crate::states::States::Menu)),
             )
             .add_systems(OnExit(crate::states::States::Menu), cleanup_menu)
             .add_systems(OnEnter(crate::states::States::Worldgen), setup_load_play_ui)
-            .add_systems(
-                OnExit(crate::states::States::LoadPlay),
-                cleanup_load_play_ui,
-            );
+            .add_systems(OnExit(crate::states::States::LoadPlay), cleanup_load_play_ui);
     }
 }
 
@@ -83,11 +79,7 @@ fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
         .spawn(left)
         .with_children(|children| {
             children.spawn(TextBundle::from_section(
-                format!(
-                    "Plowpaw ({}) ({})",
-                    env!("VERGEN_GIT_BRANCH"),
-                    env!("VERGEN_GIT_SHA")
-                ),
+                format!("Plowpaw ({}) ({})", env!("VERGEN_GIT_BRANCH"), env!("VERGEN_GIT_SHA")),
                 TextStyle {
                     font_size: 12.0,
                     color: Color::WHITE,
@@ -244,22 +236,16 @@ fn button_style_system(
         let mut nine_slice = nine_slice_query.get_mut(*child).unwrap();
         match *interaction {
             Interaction::Pressed => {
-                *nine_slice = NineSliceUiTexture::from_slice(
-                    ui_assets.buttons_image.clone(),
-                    Rect::new(48., 48., 96., 96.),
-                );
+                *nine_slice =
+                    NineSliceUiTexture::from_slice(ui_assets.buttons_image.clone(), Rect::new(48., 48., 96., 96.));
             }
             Interaction::Hovered => {
-                *nine_slice = NineSliceUiTexture::from_slice(
-                    ui_assets.buttons_image.clone(),
-                    Rect::new(0., 144., 48., 192.),
-                );
+                *nine_slice =
+                    NineSliceUiTexture::from_slice(ui_assets.buttons_image.clone(), Rect::new(0., 144., 48., 192.));
             }
             Interaction::None => {
-                *nine_slice = NineSliceUiTexture::from_slice(
-                    ui_assets.buttons_image.clone(),
-                    Rect::new(0., 96., 48., 144.),
-                );
+                *nine_slice =
+                    NineSliceUiTexture::from_slice(ui_assets.buttons_image.clone(), Rect::new(0., 96., 48., 144.));
             }
         }
     }

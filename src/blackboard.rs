@@ -75,10 +75,7 @@ impl Blackboard {
     /// assert_eq!(blackboard.get("key"), &serde_json::json!("value"));
     /// ```
     pub fn insert(&mut self, key: &str, value: serde_json::Value) {
-        self.0
-            .as_object_mut()
-            .unwrap()
-            .insert(key.to_string(), value);
+        self.0.as_object_mut().unwrap().insert(key.to_string(), value);
     }
 
     /// Removes a key-value pair from the `Blackboard`.

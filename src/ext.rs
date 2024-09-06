@@ -35,13 +35,7 @@ pub impl Vec2 {
     /// assert_eq!(tilepos, TilePos { x: 0, y: 0 });
     /// ```
     fn to_tilepos(&self) -> TilePos {
-        TilePos::from_world_pos(
-            self,
-            &TILEMAP_SIZE,
-            &TILEMAP_TILE_SIZE.into(),
-            &TILEMAP_TYPE,
-        )
-        .unwrap()
+        TilePos::from_world_pos(self, &TILEMAP_SIZE, &TILEMAP_TILE_SIZE.into(), &TILEMAP_TYPE).unwrap()
     }
 
     /// Returns a normalized vector pointing from `self` towards `other`.

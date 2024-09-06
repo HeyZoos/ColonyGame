@@ -10,9 +10,5 @@ fn main() {
     }
 
     let git = Git2Builder::all_git().unwrap();
-    Emitter::default()
-        .add_instructions(&git)
-        .unwrap()
-        .emit()
-        .unwrap();
+    Emitter::default().add_instructions(&git).unwrap().emit().unwrap();
 }
