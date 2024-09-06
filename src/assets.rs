@@ -38,11 +38,11 @@ pub struct UiAssets {
     pub buttons_image: Handle<Image>,
 
     #[asset(texture_atlas_layout(tile_size_x = 26.0, tile_size_y = 26.0, columns = 2, rows = 4))]
-    pub buttons_layout: Handle<TextureAtlasLayout>,
+    pub _buttons_layout: Handle<TextureAtlasLayout>,
 
     #[asset(path = "image/xs.png")]
     pub xs_image: Handle<Image>,
 
     #[asset(texture_atlas_layout(tile_size_x = 16.0, tile_size_y = 16.0, columns = 2, rows = 12))]
-    pub xs_layout: Handle<TextureAtlasLayout>,
+    pub _xs_layout: Handle<TextureAtlasLayout>,
 }

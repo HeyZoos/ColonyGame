@@ -13,8 +13,6 @@ use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
 use crate::agent::Bush;
-use crate::assets::UiAssets;
-use crate::reservations::Reservable;
 use crate::states::States::{LoadPlay, Play, Worldgen};
 
 pub const TILEMAP_SIZE: TilemapSize = TilemapSize::new(256, 256);
@@ -45,18 +43,7 @@ impl Plugin for WorldgenPlugin {
 
         app.add_systems(Update, update_tile_transform_system.run_if(in_state(Play)));
 
-        app.add_systems(
-            Update,
-            spawn_x_tile_on_reservable_added.run_if(in_state(Play)),
-        );
-
-        app.add_systems(
-            Update,
-            remove_x_tile_on_reservation_destroyed.run_if(in_state(Play)),
-        );
-
         app.add_systems(OnEnter(Play), center_camera_in_world);
-        app.add_systems(OnEnter(Play), mark_a_bush_as_reserved);
     }
 }
 
@@ -330,66 +317,6 @@ fn resource_layer_startup_system(
 
     // bool -> Progress
     true.into()
-}
-
-fn mark_a_bush_as_reserved(
-    mut commands: Commands,
-    mut tilemaps: Query<(&Name, &mut TileStorage)>,
-    ui_assets: Res<UiAssets>,
-) {
-    // Create a tilemap to hold reservations
-    commands.spawn((
-        Name::new("Reservations"),
-        TilemapBundle {
-            grid_size: TILEMAP_TILE_SIZE.into(),
-            map_type: TILEMAP_TYPE,
-            size: TILEMAP_SIZE,
-            storage: TileStorage::empty(TILEMAP_SIZE),
-            texture: TilemapTexture::Single(ui_assets.xs_image.clone()),
-            tile_size: TILEMAP_TILE_SIZE,
-            transform: Transform::from_xyz(0.0, 0.0, 6.0),
-            ..default()
-        },
-    ));
-
-    // Mark all resources as reservable
-    for (name, mut tilemap) in tilemaps.iter_mut() {
-        if name.as_str() == "Resources" {
-            for tile in tilemap.iter() {
-                if let Some(tile) = tile {
-                    commands.entity(*tile).insert(Reservable);
-                }
-            }
-        }
-    }
-}
-
-fn spawn_x_tile_on_reservable_added(
-    mut commands: Commands,
-    changed: Query<(Entity, &TilePos), Added<Reservable>>,
-    tilemaps: Query<(Entity, &Name, &TileStorage)>,
-) {
-    // Find the reservations tilemap
-    let reservations_tilemap = tilemaps
-        .iter()
-        .find(|(_, name, _)| name.as_str() == "Reservations")
-        .unwrap();
-
-    // Add xs for all the newly reserved tiles
-    for (entity, tilepos) in changed.iter() {
-        commands.spawn(TileBundle {
-            position: *tilepos,
-            texture_index: TileTextureIndex(11),
-            tilemap_id: TilemapId(reservations_tilemap.0),
-            ..Default::default()
-        });
-    }
-}
-
-fn remove_x_tile_on_reservation_destroyed(
-
-) {
-
 }
 
 /// Maintain the `Transform` component on tiles so that they can be used in spatial queries

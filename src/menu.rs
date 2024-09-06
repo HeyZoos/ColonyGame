@@ -17,7 +17,10 @@ impl Plugin for MenuPlugin {
             )
             .add_systems(OnExit(crate::states::States::Menu), cleanup_menu)
             .add_systems(OnEnter(crate::states::States::Worldgen), setup_load_play_ui)
-            .add_systems(OnExit(crate::states::States::LoadPlay), cleanup_load_play_ui);
+            .add_systems(
+                OnExit(crate::states::States::LoadPlay),
+                cleanup_load_play_ui,
+            );
     }
 }
 
@@ -199,15 +202,18 @@ struct LoadMenu;
 fn setup_load_play_ui(mut commands: Commands) {
     let start = std::time::Instant::now();
 
-    commands.spawn((NodeBundle {
-        style: Style {
-            height: Val::Percent(100.0),
-            width: Val::Percent(100.0),
+    commands.spawn((
+        NodeBundle {
+            style: Style {
+                height: Val::Percent(100.0),
+                width: Val::Percent(100.0),
+                ..default()
+            },
+            background_color: BackgroundColor(Color::rgb_u8(238, 232, 213)), // Solarized Base2
             ..default()
         },
-        background_color: BackgroundColor(Color::rgb_u8(238, 232, 213)), // Solarized Base2
-        ..default()
-    }, LoadMenu));
+        LoadMenu,
+    ));
 
     info!("returned in {}ms", start.elapsed().as_millis());
 }

@@ -3,7 +3,8 @@ use crate::animation::GatheringTag;
 use crate::blackboard::Blackboard;
 use crate::ext::Vec2Ext;
 use crate::reservations::{
-    Reservable, Reservation, ReservationRequest, ReservationRequestBuilder, Reserved,
+    RemoveReservation, Reservable, Reservation, ReservationRequest, ReservationRequestBuilder,
+    Reserved,
 };
 use crate::states::States::Play;
 use crate::villager::{find_path, Movement};
@@ -130,7 +131,6 @@ pub fn move_to_nearest_system<T: Clone + Component + Debug>(
                     if let Ok((goal_tile_entity, &goal_tile_position)) = goal_tile {
                         let path_option = find_path(&world, start_coord, goal_tile_position);
 
-                        trace!("Hello?");
                         if let Some(mut path) = path_option {
                             // We don't want to include the first goal if it is the same as the start
                             if path.first() == Some(&start_coord) {
@@ -194,6 +194,8 @@ pub fn gather_action_system(
         (With<HasThinker>, Without<Bush>),
     >,
     mut action_query: Query<(&Actor, &mut ActionState, &GatherAction, &ActionSpan)>,
+    tilepos_q: Query<&TilePos>,
+    mut remove_reservation_event_writer: EventWriter<RemoveReservation>,
 ) {
     for (actor, mut action_state, _action, span) in &mut action_query {
         let _guard = span.span().enter();
@@ -228,6 +230,9 @@ pub fn gather_action_system(
                                 let entity_id = entity.id(); // Store the entity ID to avoid multiple mutable borrows
                                 commands.entity(entity_id).despawn();
                                 *action_state = ActionState::Success;
+
+                                let tilepos = *tilepos_q.get(entity_id).unwrap();
+                                remove_reservation_event_writer.send(RemoveReservation { tilepos });
                             } else {
                                 *action_state = ActionState::Failure;
                             }
