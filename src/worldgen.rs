@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use bevy_rapier2d::geometry::CollisionGroups;
 use bevy_rapier2d::prelude::Collider;
 use grid_2d::{Grid, Size};
 use iyes_progress::{Progress, ProgressSystem};
@@ -15,6 +16,7 @@ use wfc::Wave;
 
 use crate::agent::Bush;
 use crate::ext::TilePosExt;
+use crate::marquee::{SELECTABLE_GROUP, SELECTION_GROUP};
 use crate::states::States::{LoadPlay, Play, Worldgen};
 use crate::{ENTITY_SIZE_IN_METERS, ENTITY_SIZE_IN_PIXELS};
 
@@ -285,6 +287,7 @@ fn resource_layer_startup_system(mut commands: Commands, world: Res<World>, asse
                             ENTITY_SIZE_IN_PIXELS / 2.0,
                             ENTITY_SIZE_IN_PIXELS / 2.0,
                         ));
+                        resource_tile.insert(CollisionGroups::new(SELECTABLE_GROUP, SELECTION_GROUP));
                     }
 
                     break; // Stop after placing the first valid resource

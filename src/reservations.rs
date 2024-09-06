@@ -100,17 +100,6 @@ fn mark_a_bush_as_reserved(
             ..default()
         },
     ));
-
-    // Mark all resources as reservable
-    for (name, tilemap) in tilemaps.iter_mut() {
-        if name.as_str() == "Resources" {
-            for tile in tilemap.iter() {
-                if let Some(tile) = tile {
-                    commands.entity(*tile).insert(Reservable);
-                }
-            }
-        }
-    }
 }
 
 fn on_reservable_added(
