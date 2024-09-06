@@ -26,8 +26,12 @@ use crate::reservations::ReservationsPlugin;
 use bevy::app::App;
 use bevy::prelude::*;
 use bevy_pancam::PanCamPlugin;
+use bevy_rapier2d::prelude::*;
 use big_brain::BigBrainPlugin;
 use seldom_state::StateMachinePlugin;
+
+pub const ENTITY_SIZE_IN_PIXELS: f32 = 16.0;
+pub const ENTITY_SIZE_IN_METERS: f32 = 1.0;
 
 pub struct GamePlugin;
 
@@ -49,5 +53,10 @@ impl Plugin for GamePlugin {
             VillagerPlugin,
             WorldgenPlugin,
         ));
+
+        app.add_plugins(
+            RapierPhysicsPlugin::<NoUserData>::default().with_length_unit(ENTITY_SIZE_IN_PIXELS),
+        )
+        .add_plugins(RapierDebugRenderPlugin::default());
     }
 }

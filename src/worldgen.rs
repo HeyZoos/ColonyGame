@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use bevy_rapier2d::prelude::Collider;
 use grid_2d::{Grid, Size};
 use iyes_progress::{Progress, ProgressSystem};
 use noise::{NoiseFn, Perlin};
@@ -13,7 +14,9 @@ use wfc::overlapping::OverlappingPatterns;
 use wfc::Wave;
 
 use crate::agent::Bush;
+use crate::ext::TilePosExt;
 use crate::states::States::{LoadPlay, Play, Worldgen};
+use crate::{ENTITY_SIZE_IN_METERS, ENTITY_SIZE_IN_PIXELS};
 
 pub const TILEMAP_SIZE: TilemapSize = TilemapSize::new(256, 256);
 pub const TILEMAP_TILE_SIZE: TilemapTileSize = TilemapTileSize::new(16.0, 16.0);
@@ -290,7 +293,14 @@ fn resource_layer_startup_system(
                     if *resource_id == BUSH_TILE_ID {
                         resource_tile.insert(Name::new("Bush"));
                         resource_tile.insert(Bush);
-                        resource_tile.insert(Transform::default());
+                        resource_tile.insert(TransformBundle::from(Transform {
+                            translation: tile_pos.to_world_space().extend(0.0),
+                            ..default()
+                        }));
+                        resource_tile.insert(Collider::cuboid(
+                            ENTITY_SIZE_IN_PIXELS / 2.0,
+                            ENTITY_SIZE_IN_PIXELS / 2.0,
+                        ));
                     }
 
                     break; // Stop after placing the first valid resource

@@ -1,8 +1,10 @@
 use bevy::prelude::*;
+use bevy::render::camera::ScalingMode::WindowSize;
 use bevy_nine_slice_ui::{NineSliceUiMaterialBundle, NineSliceUiPlugin, NineSliceUiTexture};
 use bevy_pancam::PanCam;
 
 use crate::assets::UiAssets;
+use crate::ENTITY_SIZE_IN_PIXELS;
 
 pub struct MenuPlugin;
 
@@ -30,6 +32,10 @@ struct Menu;
 fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
     commands
         .spawn(Camera2dBundle {
+            // projection: OrthographicProjection {
+            //     scaling_mode: WindowSize(ENTITY_SIZE_IN_PIXELS),
+            //     ..default()
+            // },
             transform: Transform::from_xyz(0.0, 0.0, 5.0),
             ..default()
         })
