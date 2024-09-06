@@ -31,8 +31,8 @@ struct MarqueeSelection {
 
 impl MarqueeSelection {
     fn display_gizmos(&self, gizmos: &mut Gizmos) {
-        gizmos.circle_2d(self.start, 0.125, Color::YELLOW);
-        gizmos.circle_2d(self.end, 0.125, Color::YELLOW);
+        gizmos.circle_2d(self.start, 0.125, Color::WHITE);
+        gizmos.circle_2d(self.end, 0.125, Color::WHITE);
     }
 }
 

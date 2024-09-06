@@ -6,12 +6,12 @@ use crate::ext::*;
 use crate::states::States::Play;
 use crate::worldgen::TILEMAP_SIZE;
 use bevy::prelude::*;
-use bevy::utils::petgraph::matrix_graph::Zero;
 use bevy_ecs_tilemap::helpers::square_grid::neighbors::{Neighbors, SquareDirection};
 use bevy_ecs_tilemap::prelude::TilePos;
 use big_brain::actions::Steps;
 use big_brain::pickers::FirstToScore;
 use big_brain::prelude::Thinker;
+use pathfinding::num_traits::Zero;
 use pathfinding::prelude::astar;
 use std::time::Duration;
 

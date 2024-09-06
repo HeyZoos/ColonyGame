@@ -80,11 +80,7 @@ fn reservation_system(
     }
 }
 
-fn mark_a_bush_as_reserved(
-    mut commands: Commands,
-    mut tilemaps: Query<(&Name, &mut TileStorage)>,
-    ui_assets: Res<UiAssets>,
-) {
+fn mark_a_bush_as_reserved(mut commands: Commands, ui_assets: Res<UiAssets>) {
     // Create a tilemap to hold reservations
     commands.spawn((
         ReservationTilemap,

@@ -1,7 +1,6 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bevy::asset::AssetMetaCheck;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -14,7 +13,7 @@ use winit::window::Icon;
 fn main() {
     App::new()
         .insert_resource(Msaa::Off)
-        .insert_resource(AssetMetaCheck::Never)
+        // TODO(Jesse): I removed this AssetMetaCheck?
         .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
         .add_plugins((DefaultPlugins
             .set(WindowPlugin {

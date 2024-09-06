@@ -1,10 +1,8 @@
 use bevy::prelude::*;
-use bevy::render::camera::ScalingMode::WindowSize;
 use bevy_nine_slice_ui::{NineSliceUiMaterialBundle, NineSliceUiPlugin, NineSliceUiTexture};
 use bevy_pancam::PanCam;
 
 use crate::assets::UiAssets;
-use crate::ENTITY_SIZE_IN_PIXELS;
 
 pub struct MenuPlugin;
 
@@ -77,16 +75,17 @@ fn setup_menu(mut commands: Commands, ui_assets: Res<UiAssets>) {
 
     let left_id = commands
         .spawn(left)
-        .with_children(|children| {
-            children.spawn(TextBundle::from_section(
-                format!("Plowpaw ({}) ({})", env!("VERGEN_GIT_BRANCH"), env!("VERGEN_GIT_SHA")),
-                TextStyle {
-                    font_size: 12.0,
-                    color: Color::WHITE,
-                    ..default()
-                },
-            ));
-        })
+        // TODO(Jesse): Restore this!
+        // .with_children(|children| {
+        //     children.spawn(TextBundle::from_section(
+        //         format!("Plowpaw ({}) ({})", std::env::var("VERGEN_GIT_BRANCH").unwrap(), std::env::var("VERGEN_GIT_SHA").unwrap()),
+        //         TextStyle {
+        //             font_size: 12.0,
+        //             color: Color::WHITE,
+        //             ..default()
+        //         },
+        //     ));
+        // })
         .id();
 
     let middle_id = commands.spawn(middle).id();

@@ -28,7 +28,7 @@ pub struct CharacterAssets {
     #[asset(path = "character.png")]
     pub image: Handle<Image>,
 
-    #[asset(texture_atlas_layout(tile_size_x = 48.0, tile_size_y = 48.0, columns = 8, rows = 24))]
+    #[asset(texture_atlas_layout(tile_size_x = 48, tile_size_y = 48, columns = 8, rows = 24))]
     pub layout: Handle<TextureAtlasLayout>,
 }
 
@@ -37,12 +37,12 @@ pub struct UiAssets {
     #[asset(path = "image/buttons.png")]
     pub buttons_image: Handle<Image>,
 
-    #[asset(texture_atlas_layout(tile_size_x = 26.0, tile_size_y = 26.0, columns = 2, rows = 4))]
+    #[asset(texture_atlas_layout(tile_size_x = 26, tile_size_y = 26, columns = 2, rows = 4))]
     pub _buttons_layout: Handle<TextureAtlasLayout>,
 
     #[asset(path = "image/xs.png")]
     pub xs_image: Handle<Image>,
 
-    #[asset(texture_atlas_layout(tile_size_x = 16.0, tile_size_y = 16.0, columns = 2, rows = 12))]
+    #[asset(texture_atlas_layout(tile_size_x = 16, tile_size_y = 10, columns = 2, rows = 12))]
     pub _xs_layout: Handle<TextureAtlasLayout>,
 }

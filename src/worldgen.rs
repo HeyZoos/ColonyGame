@@ -18,7 +18,7 @@ use crate::agent::Bush;
 use crate::ext::TilePosExt;
 use crate::marquee::{SELECTABLE_GROUP, SELECTION_GROUP};
 use crate::states::States::{LoadPlay, Play, Worldgen};
-use crate::{ENTITY_SIZE_IN_METERS, ENTITY_SIZE_IN_PIXELS};
+use crate::ENTITY_SIZE_IN_PIXELS;
 
 pub const TILEMAP_SIZE: TilemapSize = TilemapSize::new(256, 256);
 pub const TILEMAP_TILE_SIZE: TilemapTileSize = TilemapTileSize::new(16.0, 16.0);
